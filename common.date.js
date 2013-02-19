@@ -1,6 +1,7 @@
 /*--------------------------------------------------------------------------------*\
 * Date prototype
 \*--------------------------------------------------------------------------------*/
+//mobile codeing and commit  !!
 Date.prototype.addSeconds = function(seconds) {
     return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds() + seconds);
 }
