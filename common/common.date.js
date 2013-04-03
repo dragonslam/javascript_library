@@ -1,7 +1,6 @@
 /*--------------------------------------------------------------------------------*\
 * Date prototype
 \*--------------------------------------------------------------------------------*/
-//mobile codeing and commit  !!
 Date.prototype.addSeconds = function(seconds) {
     return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds() + seconds);
 }
@@ -35,8 +34,7 @@ Date.prototype.parseDate = function(dateString, spliter)
 Date.prototype.compare = function(date) 
 {	// 현재 날짜가 date보다 이전이면 -1, 같으면 0, 이후이면 1이다.
 	var cVal = this.calculator(date);
-
-	return (cVal == 0) ? 0 : (cVal > 0) ? 1 : -1;
+    return (cVal == 0) ? 0 : ((cVal > 0) ? 1 : -1);
 }
 Date.prototype.calculator = function(date) 
 {	// 지정된 날자에서 date 만큼을 빼준다. 

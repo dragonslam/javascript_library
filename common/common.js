@@ -2,7 +2,7 @@ var GV_IsConsoleLogging = true;
 
 function $Logging(msg) {
     if (GV_IsConsoleLogging)
-    	if (window.console && typeof(window.console) == "object")
+        if (window.console && typeof(window.console) == "object")
 			window.console.log(msg);
         else
             alert(msg);
@@ -14,24 +14,24 @@ document.onfocusin = function() {
 }
 
 /*--------------------------------------------------------------------------------*\
-* StringBuilder prototype
+* StringBuilder object
 \*--------------------------------------------------------------------------------*/
 var StringBuilder = function()
 { 
-    this.buffer = new Array(); 
+    this.buffer = [];
 }
 StringBuilder.prototype = {
     append : function(str) { 
-	    this.buffer[this.buffer.length] = str; 
+        this.buffer[this.buffer.length] = str; 
     },
     toString : function(s) { 
-	    return this.buffer.join(s ? s : ""); 
+        return this.buffer.join(s ? s : ""); 
     }
 }
 
 
 /*--------------------------------------------------------------------------------*\
-* Dictionary prototype
+* Dictionary object
 \*--------------------------------------------------------------------------------*/
 function Dictionary(id, value) {
     this.id		= id;
@@ -39,15 +39,16 @@ function Dictionary(id, value) {
 }
 Dictionary.prototype = {
     toString : function() {
-	    return "id:"+ this.id +", value:"+ this.value;
+        return "id:"+ this.id +", value:"+ this.value;
     },
     logging : function() {
-	    return $Logging(this.toString());
+        return $Logging(this.toString());
     }
 }
 
+
 /*--------------------------------------------------------------------------------*\
-* Reflector prototype
+* Reflector object
 \*--------------------------------------------------------------------------------*/
 var Reflector = function(obj) {
     this.getProperties = function() {
@@ -81,7 +82,7 @@ var Reflector = function(obj) {
 
 
 /*--------------------------------------------------------------------------------*\
-* Size prototype
+* Size object
 \*--------------------------------------------------------------------------------*/
 function Size(x, y) {
     this.x	= parseInt(x);
@@ -93,34 +94,78 @@ Size.prototype = {
     */
     balance : function(maxLimit) {
         var balance = new Size(0,0);
-    	if ((this.x != 0 && this.y != 0) && (maxLimit.x != 0 || maxLimit.y != 0) && (this.x > maxLimit.x || this.y > maxLimit.y)) {
-    		
-    		var aW	= (maxLimit.x  > 0) ? (maxLimit.x / orignal.x) : 1;
-    		var aH	= (maxLimit.y  > 0) ? (maxLimit.y / orignal.y) : 1;
-    
-    		if (aW <= aH) {
-    			balance.x	= parseInt(this.x * aW);
-    			balance.y	= parseInt(this.y * aW);
-    		} else {
-    			balance.x	= parseInt(this.x * aH);
-    			balance.y	= parseInt(this.y * aH);
-    		}
-    	} else {
-    		balance.x	= this.x;
-    		balance.y	= this.y;
-    	}
-    	return balance;
+        if ((this.x != 0 && this.y != 0) && (maxLimit.x != 0 || maxLimit.y != 0) && (this.x > maxLimit.x || this.y > maxLimit.y)) {
+
+            var aW	= (maxLimit.x  > 0) ? (maxLimit.x / this.x) : 1;
+            var aH	= (maxLimit.y  > 0) ? (maxLimit.y / this.y) : 1;
+
+            if (aW <= aH) {
+                balance.x	= parseInt(this.x * aW);
+                balance.y	= parseInt(this.y * aW);
+            } else {
+                balance.x	= parseInt(this.x * aH);
+                balance.y	= parseInt(this.y * aH);
+            }
+        } else {
+            balance.x	= this.x;
+            balance.y	= this.y;
+        }
+        return balance;
     },
     /*
         @비교하는 size와 같으면 true
     */
     compare : function(size) {
-	    return ((this.x == size.x) && (this.y == size.y));
+        return ((this.x == size.x) && (this.y == size.y));
     },    
     toString : function() {
-	    return "x:"+ this.x +",y:"+ this.y;
+        return "x:"+ this.x +",y:"+ this.y;
     },
     logging : function()  {
         return $Logging(this.toString());
     }
 }
+
+
+/*--------------------------------------------------------------------------------*\
+* QueryObject object
+\*--------------------------------------------------------------------------------*/
+var QueryObject = function() {
+
+    var o = {};
+
+    var q = location.search.substring(1);
+    if (q) {
+
+        // 실제 그룹화 정규식.
+        var vg = /([^&=]+)=?([^&]*)/g;
+        
+        // 인코딩된 공백문자열을 다시 공백으로
+        var sp = /\+/g;
+
+        // 정규식을 사용하여 값을 추출
+        var decode = function(s) {
+            if (!s) {
+                return '';
+            }
+            return decodeURIComponent(s.replace(sp, " "));
+        };
+
+       // 한번씩 exec를 실행하여 값을 받아온다.
+        var tmp; 
+        while (tmp = vg.exec(q)) {
+            (function() {
+                var k = decode(tmp[1]);
+                var v = decode(tmp[2]);
+                var c;
+                if (k) {
+                    o[k] = v;
+                    c = k.charAt(0).toUpperCase() + k.slice(1);
+                    o["get" + c] = function() { return v; }
+                    o["set" + c] = function(val) { v = val; }
+                }
+            })();
+        }
+    }
+    return o;
+};
