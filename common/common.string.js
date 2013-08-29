@@ -42,9 +42,11 @@ String.prototype.Int = function() {
 String.prototype.float = function() {	
 	return this.isFinite() ? parseFloat(this) : parseFloat("0.0");
 }
-String.prototype.num = function() 
-{	// 숫자만 반환
-	return String(this.trim().replace(/[^0-9]/g, "")).int();
+String.prototype.parseInt = function() {
+	return String(this.trim().replace(/[^-_0-9]/g, "")).int();
+}
+String.prototype.parseFloat = function() {
+    return String(this.trim().replace(/[^-_0-9.0-9]/g, "")).float();
 }
 String.prototype.money = function() 
 { // 숫자에 3자리마다 , 를 찍어서 반환
@@ -204,12 +206,19 @@ String.prototype.indexesOf = function(ptn) {
 		start = position;
 	}
 	return hits;
-}
+};
 String.prototype.replaceAll = function(source, target) {
 	source = source.replace(new RegExp("(\\W)", "g"), "\\$1");
 	target = target.replace(new RegExp("\\$", "g"), "$$$$");
 	return this.replace(new RegExp(source, "gm"), target);
-}
+};
+// "{0} is dead, but {1} is alive! {0} {2}".format("ASP", "ASP.NET")
+String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined' ? args[number] : match;
+    });
+};
 String.prototype.remove = function(str) {
 	if (str && typeof(str) == "string")
 		return this.replaceAll(str, "");

@@ -48,7 +48,7 @@ Dictionary.prototype = {
 
 
 /*--------------------------------------------------------------------------------*\
-* Reflector object
+* Reflecte object
 \*--------------------------------------------------------------------------------*/
 var Reflector = function(obj) {
     this.getProperties = function() {
@@ -78,6 +78,42 @@ var Reflector = function(obj) {
 		}
 		return methods;
 	};
+}
+
+/*--------------------------------------------------------------------------------*\
+* Clone object
+* var o = Object.create(obj);
+\*--------------------------------------------------------------------------------*/
+var Clone = function(obj) {
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        var copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        var copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = Clone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        var copy = {};
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = Clone(obj[attr]);
+        }
+        return copy;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
 }
 
 
@@ -126,6 +162,50 @@ Size.prototype = {
     }
 }
 
+/*--------------------------------------------------------------------------------*\
+* Rectangle object
+\*--------------------------------------------------------------------------------*/
+function Rectangle(x, y, width, height) {
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	this.offsetX = x + width;
+	this.offsetY = y + height;    
+}
+Rectangle.prototype = {
+    containPoint : function() {
+        if (arguments && arguments.length > 0) {
+            if (arguments.length == 2)  {
+                var x = arguments[0];
+                var y = arguments[1];
+                return ((this.x < x && this.offsetX > x) && (this.y < y && this.offsetY > y));
+            }
+            else if (typeof arguments[0] == "object") {
+                var o = arguments[0];
+                if (o instanceof Size) {
+                    return ((this.x < o.x && this.offsetX > o.x) && (this.y < o.y && this.offsetY > o.y));
+                }
+            }
+        }
+        return false;
+    },
+    compare : function(rectangle) {
+        if (rectangle instanceof Rectangle) {
+            return ((this.x == rectangle.x) && (this.y == rectangle.y) 
+                && (this.width == rectangle.width) && (this.height == rectangle.height));
+        }
+        else {
+            return false;
+        }
+    },    
+    toString : function() {
+        return "x:"+ this.x +",y:"+ this.y +",width:"+ this.width +",height:"+ this.height;
+    },
+    logging : function()  {
+        return $Logging(this.toString());
+    }
+};
 
 /*--------------------------------------------------------------------------------*\
 * QueryObject object
