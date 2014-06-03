@@ -18,8 +18,7 @@ document.onfocusin = function() {
 \*--------------------------------------------------------------------------------*/
 var StringBuilder = function()
 { 
-    this.buffer = [];
-}
+    this.buffer = [];3
 StringBuilder.prototype = {
     append : function(str) { 
         this.buffer[this.buffer.length] = str; 
