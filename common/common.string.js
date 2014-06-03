@@ -236,6 +236,13 @@ String.prototype.delHtmlTag = function() {
    objStrip = /[<][^>]*[>]/gi;
    return this.replace(objStrip, " ");
 }
+String.prototype.escapeHTML = function() {
+	return this.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
+}
 String.prototype.URIencoder = function() {
 	try {
 		return encodeURIComponent(this);	
@@ -334,4 +341,9 @@ String.prototype.toDate = function() {
 		}
 	}
 	return null;
+}
+
+
+function test() {
+    
 }

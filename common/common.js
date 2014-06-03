@@ -249,3 +249,39 @@ var QueryObject = function() {
     }
     return o;
 };
+
+/*--------------------------------------------------------------------------------*\
+* dynamic script loading 
+/*--------------------------------------------------------------------------------*/
+var LoadScript = function(url, callback, charset, defer, id) {
+	if (typeof url != 'string' || url.isEmpty()) return;
+		
+	var head = document.getElementsByTagName('head')[0];	
+	var script = document.createElement('script');
+	var charset = (charset && typeof charset == 'string') ? charset : 'UTF-8';
+	
+	if (id && typeof id == 'string' && id != ''){
+		script.id = id;
+	}
+	script.src = url;
+	script.charset = charset;
+	script.type = 'text/javascript';
+	script.defer = (defer && typeof defer == 'boolean') ? 'defer' : '';
+	
+	var loaded = false;
+	if (typeof callback == 'function') {
+		script.onreadystatechange = function() {
+			if (this.readyState == 'loaded' || this.readyState == 'complate') {
+				if (loaded) return;
+				callback();
+				loaded = true;
+			}
+		};
+		script.onload = function() {
+			callback();
+			loaded = true;
+		};
+	}
+	
+	head.appendChild(script);
+};
