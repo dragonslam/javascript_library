@@ -64,37 +64,36 @@ Date.prototype.getHalf = function()
 Date.prototype.toDateString = function(type)
 {
 	type = typeof(type) == "number" ? type : 0;	
-	var returnStr = "YYMMDD";
+	var f = "yyyyMMdd";
 
 	switch (type) {
-		case  0	: returnStr = "YYMMDD";		break;
-		case  1	: returnStr = "YY-MM-DD";		break;
-		case  2	: returnStr = "YY/MM/DD";		break;
-		case 10	: returnStr = "YY년 MM월 DD일 "	+ this.toWeekString(2);	break;
-		case 11	: returnStr = "YY-MM-DD "			+ this.toWeekString(1);	break;
-		case 12	: returnStr = "YY/MM/DD "			+ this.toWeekString(0);	break;
-		default	: returnStr = "YY년 MM월 DD일";
+		case  0	: f = "yyyyMMdd";		break;
+		case  1	: f = "yyyy-MM-dd";		break;
+		case  2	: f = "yyyy/MM/dd";		break;
+		case 10	: f = "yyyy년 MM월 dd일 E2"	break;
+		case 11	: f = "yy-MM-dd E1"		break;
+		case 12	: f = "yy/MM/dd E0"		break;
+		default	: f = "yy년 MM월 dd일";
 	}
-	return returnStr.replace("YY", this.getFullYear()).replace("MM", String(this.getMonth()+1).digits(2)).replace("DD", String(this.getDate()).digits(2));
+	return this.format(f);
 }
 Date.prototype.toDateTimeString = function(type)
 {
 	type = typeof(type) == "number" ? type : 0;	
-	var returnStr = "YYYYMMDD";
+	var f = "hhmmss";
 	
 	switch (type) {
-		case  0	: returnStr = "HHMMSS";				break;
-		case  1	: returnStr = "HH:MM:SS";				break;
-		case  2	: returnStr = "HH:MM:SS";				break;
-		case 10	: returnStr = "HH시 MM분 SS초";		break;
-		case 11	: returnStr = "HH:MM:SS";				break;
-		case 12	: returnStr = "HH:MM:SS";				break;
-		default	: returnStr = "HH시 MM분 SS초";		break;
+		case  0	: f = "hhmmss";		break;
+		case  1	: f = "hh:mm";		break;
+		case  2	: f = "hh:mm";		break;
+		case 10	: f = "hh:mm";		break;
+		case 11	: f = "hh:mm:ss";	break;
+		case 12	: f = "hh:mm:ss";	break;
+		default	: f = "hh시 mm분 ss초";	break;
 	}
-	return this.toDateString(type) +" "+ returnStr.replace("HH", String(this.getHours()).digits(2) ).replace("MM", String(this.getMinutes()).digits(2)).replace("SS", String(this.getSeconds()).digits(2));
+	return this.toDateString(type) +" "+ this.format(f); 
 }
-Date.prototype.toWeekString = function(type)
-{
+Number.prototype.toWeekName = function(type) {	
 	var weeks = "";
 	if (type == 1)
 		weeks = "일,월,화,수,목,금,토".split(",");
@@ -103,17 +102,55 @@ Date.prototype.toWeekString = function(type)
 	else
 		weeks = "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday".split(",");
 
-	return weeks[this.getDay()];
+	return weeks[this];
+}
+String.prototype.toWeekName = function(type) {
+	return this.isFinite() ? parseInt(this).toWeekName(type) : '';
+} 
+Date.prototype.toWeekName = function(type)
+{
+	return this.getDay().toWeekName();
 }
 
+Number.prototype.toMeridiem = function(type) {	
+	var meridiem = "";
+	if (type == 1)
+		meridiem = "am,pm".split(",");
+	else if (type == 2)
+		meridiem = "오전,오후".split(",");
+	else
+		meridiem = "am,pm".split(",");
 
-Number.prototype.toJSON	=
-Boolean.prototype.toJSON	= 
-String.prototype.toJSON	= function (key) {
-	return jQuery.parseJSON('{"'+ key +'" : "'+ this.valueOf() +'"}');
-};
+	return meridiem[(this > 12 ? 1 : 0)];
+}
+String.prototype.toMeridiem = function(type) {
+	return this.isFinite() ? parseInt(this).toMeridiem(type) : '';
+} 
+Date.prototype.toMeridiem = function(type)
+{
+	return this.getHours().toMeridiem();
+}
 
-Date.prototype.toJSON = function (key, type) {
-	type = typeof(type) == "number" ? type : 0;	
-	return String(isFinite(this.valueOf()) ? this.toDateTimeString(type) : "").toJSON(key);
+Date.prototype.format = function (f) {
+
+    if (!this.valueOf()) return " ";	
+
+	var d = this;
+	return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p)/gi, function ($1) {
+		switch ($1) {
+			case "yyyy": return d.getFullYear();
+			case "yy": return (d.getFullYear() % 1000).digit(2);
+			case "MM": return (d.getMonth() + 1).digit(2);
+			case "dd": return d.getDate().digit(2);
+			case "E0": return d.getDay().toWeekName(0);
+			case "E1": return d.getDay().toWeekName(1);
+			case "E2": return d.getDay().toWeekName(2);			
+			case "HH": return d.getHours().digit(2);
+			case "hh": return ((h = d.getHours() % 12) ? h : 12).digit(2);
+			case "mm": return d.getMinutes().digit(2);
+			case "ss": return d.getSeconds().digit(2);
+			case "a/p": return d.getHours().toMeridiem(2);
+			default: return $1;
+		}
+	});
 };

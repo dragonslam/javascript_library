@@ -14,11 +14,90 @@ document.onfocusin = function() {
 }
 
 /*--------------------------------------------------------------------------------*\
+* Dynamic script loading 
+/*--------------------------------------------------------------------------------*/
+var LoadScript = function(url, callback, charset, defer, id) {
+	if (typeof url != 'string' || url.isEmpty()) return;
+		
+	var head = document.getElementsByTagName('head')[0];	
+	var script = document.createElement('script');
+	var charset = (charset && typeof charset == 'string') ? charset : 'UTF-8';
+	
+	if (id && typeof id == 'string' && id != ''){
+		script.id = id;
+	}
+	script.src = url;
+	script.charset = charset;
+	script.type = 'text/javascript';
+	script.defer = (defer && typeof defer == 'boolean') ? 'defer' : '';
+	
+	var loaded = false;
+	if (typeof callback == 'function') {
+		script.onreadystatechange = function() {
+			if (this.readyState == 'loaded' || this.readyState == 'complate') {
+				if (loaded) return;
+				callback(true);
+				loaded = true;
+			}
+		};
+		script.onload = function() {
+			callback(true);
+			loaded = true;
+		};
+	}
+	
+	head.appendChild(script);
+};
+
+/*--------------------------------------------------------------------------------*\
+* Mobile device check 
+/*--------------------------------------------------------------------------------*/
+var MobileDevice = function() {
+	
+	if (typeof window.$MobileDevice != 'object') {
+		var nv = window.navigator;
+		var pf = nv.platform;
+		var ua = nv.userAgent;		
+			
+		var _iPad		= (/ipad/i.test(pf));
+		var _iPhone		= (/iphone/i.test(pf));
+		var _iOS		= (_iPad || _iPhone);
+		var _Android	= (/linux armv7/i.test(pf));
+		var _galtab		= (/SHW-M/i.test(ua));	// 갤텝
+		var _Mobile		= (_iOS || _Mobile) ? true : false;
+		var _TouchPad	= (/hp-tablet/gi).test(nv.appVersion);
+		var _HasTouch	= 'ontouchstart' in window && !_TouchPad;
+		
+		window.$MobileDevice = {
+				 navigator	: nv
+				,agent		: ua
+				,platform	: pf
+				,isMobile	: _Mobile
+				,isIos		: _iOS
+				,isIphone	: _iPhone
+				,isIpad		: _iPad
+				,isAndroid	: _Android
+				,isGaltab	: _galtab				
+				,isTouchPad	: _TouchPad
+				,isTouch	: _HasTouch
+				,isTablet	: function() {
+					return (this.isGaltab || ($(window).width() > 640));
+				} 
+				,isWide		: function() {
+					return ($(window).width() > $(window).height());
+				}
+			};
+	}
+	return window.$MobileDevice;
+};
+
+/*--------------------------------------------------------------------------------*\
 * StringBuilder object
 \*--------------------------------------------------------------------------------*/
 var StringBuilder = function()
 { 
-    this.buffer = [];3
+    this.buffer = [];
+}
 StringBuilder.prototype = {
     append : function(str) { 
         this.buffer[this.buffer.length] = str; 
@@ -50,32 +129,31 @@ Dictionary.prototype = {
 * Reflecte object
 \*--------------------------------------------------------------------------------*/
 var Reflector = function(obj) {
-    this.getProperties = function() {
-		var properties = [];
-		for (var prop in obj) {
-			if (typeof obj[prop] != 'function') {
-				properties.push(prop);
+	if (typeof obj != 'object') return null;
+	
+	return {
+		getProperties : function() {
+			var properties = [];
+			for(var prop in obj) {
+				if (typeof obj[prop] != 'function') properties.push(prop);
 			}
-		}
-		return properties;
-	};
-	this.getMethods = function() {
-		var methods = [];
-		for (var method in obj) {
-			if (typeof obj[method] == 'function') {
-				methods.push(method);
+			return properties;
+		},
+		getMethod : function() {
+			var methods = [];
+			for(var method in obj) {
+				if (typeof obj[method] == 'function') methods.push(method);
 			}
-		}
-		return methods;
-	};
-	this.getOwnMethods = function() {
-		var methods = [];
-		for (var method in obj) {
-			if (  typeof obj[method] == 'function' && obj.hasOwnProperty(method)) {
-				methods.push(method);
+			return methods;
+		},
+		getOwnMethod : function() {
+			var methods = [];
+			for(var method in obj) {
+				if (typeof obj[method] == 'function' && obj.hasOwnProperty(method)) 
+					methods.push(method);
 			}
+			return methods;
 		}
-		return methods;
 	};
 }
 
@@ -211,76 +289,184 @@ Rectangle.prototype = {
 \*--------------------------------------------------------------------------------*/
 var QueryObject = function() {
 
-    var o = {};
-
-    var q = location.search.substring(1);
-    if (q) {
-
-        // 실제 그룹화 정규식.
-        var vg = /([^&=]+)=?([^&]*)/g;
-        
-        // 인코딩된 공백문자열을 다시 공백으로
-        var sp = /\+/g;
-
-        // 정규식을 사용하여 값을 추출
-        var decode = function(s) {
-            if (!s) {
-                return '';
-            }
-            return decodeURIComponent(s.replace(sp, " "));
-        };
-
-       // 한번씩 exec를 실행하여 값을 받아온다.
-        var tmp; 
-        while (tmp = vg.exec(q)) {
-            (function() {
-                var k = decode(tmp[1]);
-                var v = decode(tmp[2]);
-                var c;
-                if (k) {
-                    o[k] = v;
-                    c = k.charAt(0).toUpperCase() + k.slice(1);
-                    o["get" + c] = function() { return v; }
-                    o["set" + c] = function(val) { v = val; }
-                }
-            })();
-        }
-    }
-    return o;
+	if (typeof window.$Query != 'object') {
+		var o	= new Object();		
+		o._encode = function(s) {
+			return encodeURIComponent(s);
+		};
+		o._decode = function(s) {
+			if (!s) return '';				
+			return decodeURIComponent(s.replace(/\+/g, " ")); // 인코딩된 공백문자열을 다시 공백으로
+		};
+		o.getParam = function(name) {
+			return this[name];
+		};
+		o.getQuery = function() {
+			var query = '';
+			for(var q in this) {
+				if (typeof this[q] != 'function') {
+					query += (query ? '&' : '?') + q + '=' + this[q];
+				}
+			}
+			return query;
+		};
+		o.setQuery = function(name, value) {
+			this[this._encode(name)] = this._encode(value);
+			var loc		= window.document.location;
+			var query	= this.getQuerystring();		
+			return loc.origin + loc.pathname + query + loc.hash;
+		};
+		
+		var q = location.search.substring(1);
+		if (q) {
+			var vg	= /([^&=]+)=?([^&]*)/g;	// 그룹화 정규식.
+			var tmp;
+			while (tmp = vg.exec(q)) {
+				(function() {
+					var k = o._decode(tmp[1]);
+					var v = o._decode(tmp[2]);
+					var c;
+					if (k) {
+						o[k] = v;
+						//c = k.charAt(0).toUpperCase() + k.slice(1);
+						//o["get" + c] = function() { return v; }
+						//o["set" + c] = function(val) { v = val; }
+					}
+				})();
+			}
+		}
+		window.$Query = o;		
+	}
+	return window.$Query;
 };
 
 /*--------------------------------------------------------------------------------*\
-* dynamic script loading 
-/*--------------------------------------------------------------------------------*/
-var LoadScript = function(url, callback, charset, defer, id) {
-	if (typeof url != 'string' || url.isEmpty()) return;
+* Cookie object
+\*--------------------------------------------------------------------------------*/
+var Cookie = function(expiresDay) {
+	var expdate = (typeof expiresDay == 'number') ? expiresDay : 1;	
+	return {
+		get : function(cName) {
+		    cName = cName + '=';
+		    var cookieData = document.cookie;
+		    var start = cookieData.indexOf(cName);
+		    var cValue = '';
+		    if(start != -1){
+		         start += cName.length;
+		         var end = cookieData.indexOf(';', start);
+		         if(end == -1)end = cookieData.length;
+		         cValue = cookieData.substring(start, end);
+		    }
+		    return unescape(cValue);		
+		},
+		set : function(cName, cValue, expireDays) {
+		    this.setOwner(cName, cValue, ((typeof expireDays == 'number' ? expireDays : expdate) * 24 * 60 * 60 * 1000))
+		},
+		setOwner : function(cName, cValue, expire) {			 
+			var expdate = new Date();
+		    expdate.setTime(expdate.getTime() + (typeof expire == 'number' ? expire : (expdate * 24 * 60 * 60 * 1000)));
+		    document.cookie = cName+"=" + cValue + "; path=/; domain="+document.domain+"; expires=" + expdate.toGMTString();
+		},
+		remove : function(name) {
+			this.set(name, '', -1);
+		},
+		getItem : function(name) {
+			return this.get(name);
+		},
+		setItem : function(name, value) {
+			this.set(name, value);
+		},
+		removeItem : function(name) {
+			this.remove(name);
+		}
+	};
+}; 	
+
+/*--------------------------------------------------------------------------------*\
+* Cache object
+\*--------------------------------------------------------------------------------*/
+var Cache = function(type) {
+	var _cacheType 	= (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session		
+	var _cacheStorage= null;
+	var _cacheExpires= null;
+	var _defaultCache= {
+			set : function() { return;},
+			get : function() { return '';},
+			isStatus : function() { return false;},
+			remove : function() { return;}
+		};	
+	
+	if (_cacheType == 'session') {
+		if (!window.sessionStorage) return _defaultCache;
 		
-	var head = document.getElementsByTagName('head')[0];	
-	var script = document.createElement('script');
-	var charset = (charset && typeof charset == 'string') ? charset : 'UTF-8';
-	
-	if (id && typeof id == 'string' && id != ''){
-		script.id = id;
+		_cacheStorage = window.sessionStorage;
+		_cacheExpires = 60 * 60 * 12;	// 12 hours
+	} 
+	else if (_cacheType == 'cache') {
+		if (!window.localStorage) return _defaultCache;
+		
+		_cacheStorage = window.localStorage;
+		_cacheExpires = 60 * 5;			// 5 mins
 	}
-	script.src = url;
-	script.charset = charset;
-	script.type = 'text/javascript';
-	script.defer = (defer && typeof defer == 'boolean') ? 'defer' : '';
+	else if (_cacheType == 'local') {
+		if (!window.localStorage) return _defaultCache;
+		
+		_cacheStorage = window.localStorage;
+		_cacheExpires = 60 * 60 * 24 * 7;	// 7 days
+	}
+	else if (_cacheType == 'cookie') {
+		_cacheStorage = com.lotte.smp.Cookie(1);
+		_cacheExpires = 60 * 60 * 24 * 1;	// 1 day
+	}
+	else {
+		return _defaultCache;
+	}
 	
-	var loaded = false;
-	if (typeof callback == 'function') {
-		script.onreadystatechange = function() {
-			if (this.readyState == 'loaded' || this.readyState == 'complate') {
-				if (loaded) return;
-				callback();
-				loaded = true;
+	return {
+		type	: _cacheType,
+		storage : _cacheStorage,
+		expires : _cacheExpires, 
+		set : function(name, value, expires) {
+			if (typeof name != 'string' || name == '') return;
+			if (value == 'undefined') return;			
+			if (expires=='undefined' || typeof expires != 'number') { expires = this.expires; }
+	
+			var date = new Date();
+			var schedule= Math.round((date.setSeconds(date.getSeconds()+expires))/1000);			
+	
+			this.storage.setItem(name, value);
+			this.storage.setItem('time_'+name, schedule);
+		},
+		get : function(name) {			
+			if (this.isStatus(name)) {
+				return this.storage.getItem(name);
 			}
-		};
-		script.onload = function() {
-			callback();
-			loaded = true;
-		};
-	}
+			else {
+				return '';
+			}
+		},
+		isStatus : function(name) {
+			if (this.storage.getItem(name) == null || this.storage.getItem(name) == '')
+				return false;
+			
+			var date = new Date();
+			var current = Math.round(+date/1000);
 	
-	head.appendChild(script);
+			// Get Schedule
+			var stored_time = this.storage.getItem('time_'+name);
+			if (stored_time=='undefined' || stored_time=='null') { stored_time = 0; }
+	
+			// Expired
+			if (stored_time < current) {	
+				this.remove(name);
+				return false;
+			} else {
+				return true;
+			}
+		},
+		remove : function(name) {			
+			this.storage.removeItem(name);
+			this.storage.removeItem('time_'+name);
+		}
+	};
 };

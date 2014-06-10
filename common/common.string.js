@@ -31,7 +31,7 @@ String.prototype.isEmail = function() {
 	return (/\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/).test(this.trim());
 }
 String.prototype.isUrl = function() {
-	return (/(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/).test(this.trim());
+	return (/(file|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/).test(this.trim());
 }
 String.prototype.int = function() {	// 10진수 숫자로 변환.
 	return this.isFinite() ? parseInt(this, 10) : parseInt("0");
@@ -55,6 +55,9 @@ String.prototype.money = function()
 		num = num.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
 	}
 	return num;
+}
+Number.prototype.money = function() {
+	return String(this).money();
 }
 String.prototype.padLeft = function(cnt, str) 
 {
@@ -90,7 +93,10 @@ String.prototype.digits = function(cnt)
 {	// 숫자의 자리수(cnt)에 맞도록 반환
 	return this.padLeft(cnt, "0");
 }
-
+Number.prototype.digit = function(cnt) 
+{	// 숫자의 자리수(cnt)에 맞도록 반환
+	return String(this).digit(cnt);
+}
 String.prototype.startWith = function(str) {
 	if (this.equals(str))	return true;
 	
@@ -243,7 +249,7 @@ String.prototype.escapeHTML = function() {
 				.replace(/"/g, '&quot;')
 				.replace(/'/g, '&#39;');
 }
-String.prototype.URIencoder = function() {
+String.prototype.encode = function() {
 	try {
 		return encodeURIComponent(this);	
 	}
@@ -251,7 +257,7 @@ String.prototype.URIencoder = function() {
 		return this;
 	}	
 }
-String.prototype.URIdecoder = function() {
+String.prototype.decode = function() {
 	try {
 		return decodeURIComponent(this);
 	}
@@ -344,6 +350,12 @@ String.prototype.toDate = function() {
 }
 
 
-function test() {
-    
-}
+Number.prototype.toJSON		=
+Boolean.prototype.toJSON	= 
+String.prototype.toJSON		= function (key) {
+	return jQuery.parseJSON('{"'+ key +'" : "'+ this.valueOf() +'"}');
+};
+Date.prototype.toJSON = function (key, type) {
+	type = typeof(type) == "number" ? type : 0;	
+	return String(isFinite(this.valueOf()) ? this.toDateTimeString(type) : "").toJSON(key);
+};
