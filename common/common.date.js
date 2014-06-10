@@ -22,14 +22,12 @@ Date.prototype.addYear = function(year) {
 Date.prototype.now = function() {
 	return new Date();
 }
-Date.prototype.parseDate = function(dateString, spliter)
-{
+Date.prototype.parseDate = function(dateString, spliter) {
 	var arr = dateString.split(spliter);
-
 	if (arr.length == 3)
 		return new Date(String(arr[0]).Int(), String(arr[1]).Int()-1, String(arr[2]).Int());
 	else
-		return new Date();
+		return null;
 }
 Date.prototype.compare = function(date) 
 {	// 현재 날짜가 date보다 이전이면 -1, 같으면 0, 이후이면 1이다.
@@ -61,8 +59,7 @@ Date.prototype.getHalf = function()
 {	// 반기 반환. 
 	return (parseInt(this.getMonth() / 6) + 1);
 }
-Date.prototype.toDateString = function(type)
-{
+Date.prototype.toDateString = function(type) {
 	type = typeof(type) == "number" ? type : 0;	
 	var f = "yyyyMMdd";
 
@@ -77,8 +74,7 @@ Date.prototype.toDateString = function(type)
 	}
 	return this.format(f);
 }
-Date.prototype.toDateTimeString = function(type)
-{
+Date.prototype.toDateTimeString = function(type) {
 	type = typeof(type) == "number" ? type : 0;	
 	var f = "hhmmss";
 	
@@ -93,6 +89,7 @@ Date.prototype.toDateTimeString = function(type)
 	}
 	return this.toDateString(type) +" "+ this.format(f); 
 }
+
 Number.prototype.toWeekName = function(type) {	
 	var weeks = "";
 	if (type == 1)
@@ -107,8 +104,7 @@ Number.prototype.toWeekName = function(type) {
 String.prototype.toWeekName = function(type) {
 	return this.isFinite() ? parseInt(this).toWeekName(type) : '';
 } 
-Date.prototype.toWeekName = function(type)
-{
+Date.prototype.toWeekName = function(type) {
 	return this.getDay().toWeekName();
 }
 
@@ -126,8 +122,7 @@ Number.prototype.toMeridiem = function(type) {
 String.prototype.toMeridiem = function(type) {
 	return this.isFinite() ? parseInt(this).toMeridiem(type) : '';
 } 
-Date.prototype.toMeridiem = function(type)
-{
+Date.prototype.toMeridiem = function(type) {
 	return this.getHours().toMeridiem();
 }
 
