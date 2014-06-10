@@ -2,10 +2,10 @@
 * String prototype
 \*--------------------------------------------------------------------------------*/
 String.prototype.equals = function(str) {
-    return (this == str);
+    return (this === str);
 }
 String.prototype.isEmpty = function() {
-    return (this == null || this == "");
+    return (this === null || this === "");
 }
 String.prototype.isAlphaNum = function() {
 	return (this.search(/[^A-Za-z0-9_-]/) == -1);
@@ -50,11 +50,16 @@ String.prototype.parseFloat = function() {
 }
 String.prototype.money = function() 
 { // 숫자에 3자리마다 , 를 찍어서 반환
-	var num = this.trim();
-	while((/(-?[0-9]+)([0-9]{3})/).test(num)) {
-		num = num.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
+	if (this.isNumber()) {
+		var num = this.trim();
+		while((/(-?[0-9]+)([0-9]{3})/).test(num)) {
+			num = num.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
+		}
+		return num;
 	}
-	return num;
+	else {
+		return this;
+	}
 }
 Number.prototype.money = function() {
 	return String(this).money();
@@ -100,7 +105,7 @@ Number.prototype.digit = function(cnt)
 String.prototype.startWith = function(str) {
 	if (this.equals(str))	return true;
 	
-	if (String(str).length > 0)
+	if (str.length > 0)
 		return (str.equals(this.subStr(0, str.length)));
 	else
 		return false;
@@ -119,14 +124,20 @@ String.prototype.bytes = function()
 	for (var i=0; i<this.length; i++) b += (this.charCodeAt(i) > 128) ? 2 : 1;
 	return b;
 }
-String.prototype.trim = function() {		// 공백 제거
-	return this.replace(/(^\s*)|(\s*$)/g, "");
+if (typeof "static".trim != 'function') {
+	String.prototype.trim = function() {	// 공백 제거
+		return this.replace(/(^\s*)|(\s*$)/g, "");
+	}
 }
-String.prototype.ltrim = function() {	// 좌 공백제거
-	return this.replace(/(^\s*)/, "");
+if (typeof "static".trimLeft != 'function') {
+	String.prototype.trimLeft = function() {	// 좌 공백제거
+		return this.replace(/(^\s*)/, "");
+	}
 }
-String.prototype.rtrim = function() {	// 우 공백제거
-	return this.replace(/(\s*$)/, "");
+if (typeof "static".trimRight != 'function') {
+	String.prototype.trimRight = function() {	// 우 공백제거
+		return this.replace(/(\s*$)/, "");
+	}
 }
 //-----------------------------------------------------------------------------
 // 날자 체크 (년/월/일 검사)
@@ -353,9 +364,29 @@ String.prototype.toDate = function() {
 Number.prototype.toJSON		=
 Boolean.prototype.toJSON	= 
 String.prototype.toJSON		= function (key) {
-	return jQuery.parseJSON('{"'+ key +'" : "'+ this.valueOf() +'"}');
+	// jQuery.parseJSON();
+	return '{"'+ key +'" : "'+ this.valueOf() +'"}';
 };
 Date.prototype.toJSON = function (key, type) {
 	type = typeof(type) == "number" ? type : 0;	
 	return String(isFinite(this.valueOf()) ? this.toDateTimeString(type) : "").toJSON(key);
+};
+Object.prototype.toJSON 	= function(step) {
+	if (typeof step == 'number' && step > 2) return "''";
+	var cnt		= 0;
+	var json	= '';
+	var depth	= (typeof step == 'number') ? step : 0;	
+	for(var prop in this) {
+		if (typeof this[prop] != 'function') {
+			if (cnt > 0) json += ',';
+			if (typeof this[String(prop)] == 'object') {
+				json+= "'"+ prop +"':"+ Object(this[String(prop)]).toJSON(depth++) +"";
+			}
+			else {
+				json+= "'"+ prop +"':'"+ String(this[String(prop)]).encode() +"'";
+			}			
+			cnt ++;
+		}
+	}
+	return '{'+ json +'}';
 };
