@@ -124,17 +124,17 @@ String.prototype.bytes = function()
 	for (var i=0; i<this.length; i++) b += (this.charCodeAt(i) > 128) ? 2 : 1;
 	return b;
 }
-if (typeof "static".trim != 'function') {
+if (typeof "$".trim != 'function') {
 	String.prototype.trim = function() {	// 공백 제거
 		return this.replace(/(^\s*)|(\s*$)/g, "");
 	}
 }
-if (typeof "static".trimLeft != 'function') {
+if (typeof "$".trimLeft != 'function') {
 	String.prototype.trimLeft = function() {	// 좌 공백제거
 		return this.replace(/(^\s*)/, "");
 	}
 }
-if (typeof "static".trimRight != 'function') {
+if (typeof "$".trimRight != 'function') {
 	String.prototype.trimRight = function() {	// 우 공백제거
 		return this.replace(/(\s*$)/, "");
 	}
@@ -315,9 +315,8 @@ String.prototype.toDate = function() {
 			var ss = this.substr(12, 2);
 			return new Date(parseInt(y), parseInt(m)-1, parseInt(d), parseInt(hh), parseInt(mm), parseInt(ss));
 		}
-	}
-	else
-	{
+	} 
+	else {
 		if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(this))
 		{	// yyyy-mm-dd, yyyy/mm/dd
 			s = (this.split("-").length == 3) ? this.split("-") : this.split("/");			
@@ -340,7 +339,6 @@ String.prototype.toDate = function() {
 			return new Date(parseInt(s[2]), parseInt(s[0])-1, 1900+parseInt(s[1]));
 		}
 
-
 		if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1]) (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this))
 		{	// yyyy-mm-dd hh:mm:ss, yyyy/mm/dd  hh:mm:ss
 			s = this.split(" ");
@@ -348,7 +346,6 @@ String.prototype.toDate = function() {
 			t = s[1].split(":");			
 			return new Date(parseInt(d[0]), parseInt(d[1])-1, parseInt(d[2]), parseInt(t[0]), parseInt(t[1]), (t.length == 3 ? parseInt(t[2]) : 0));		
 		}
-
 		if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-](19|20)\d{2} (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this))
 		{	// mm-dd-yyyy hh:mm:ss, mm/dd/yyyy hh:mm:ss
 			s = this.split(" ");
