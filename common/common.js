@@ -310,10 +310,12 @@ var QueryObject = function() {
 			}
 			return query;
 		};
-		o.setQuery = function(name, value) {
-			this[this._encode(name)] = this._encode(value);
+		o.setQuery = function(key, value) {
+			this[key] = value;			
+		};
+		o.getUrl = function() {
 			var loc		= window.document.location;
-			var query	= this.getQuerystring();		
+			var query	= this.getQuery();		
 			return loc.origin + loc.pathname + query + loc.hash;
 		};
 		
@@ -385,47 +387,61 @@ var Cookie = function(expiresDay) {
 /*--------------------------------------------------------------------------------*\
 * Cache object
 \*--------------------------------------------------------------------------------*/
-var Cache = function(type) {
-	var _cacheType 	= (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session		
-	var _cacheStorage= null;
-	var _cacheExpires= null;
-	var _defaultCache= {
+var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
+	var _cacheType 	= (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session
+	var _span	= (typeof span == 'number') ? span : 0;
+	var _format	= (typeof format == 'string') ? format : '';
+	var _storage= null;
+	var _expires= getCacheExpires(_span, _format);
+	var _default= {
 			set : function() { return;},
 			get : function() { return '';},
 			isStatus : function() { return false;},
 			remove : function() { return;}
-		};	
+		};
+	
 	
 	if (_cacheType == 'session') {
-		if (!window.sessionStorage) return _defaultCache;
-		
-		_cacheStorage = window.sessionStorage;
-		_cacheExpires = 60 * 60 * 12;	// 12 hours
+		if (!window.sessionStorage) return _default;		 		
+		_storage= window.sessionStorage;
+		_expires= (_span != 0) ? _expires : getCacheExpires(12, 'h'); // 12 hours
 	} 
 	else if (_cacheType == 'cache') {
-		if (!window.localStorage) return _defaultCache;
-		
-		_cacheStorage = window.localStorage;
-		_cacheExpires = 60 * 5;			// 5 mins
+		if (!window.localStorage) return _default;		 		
+		_storage= window.localStorage;
+		_expires= (_span != 0) ? _expires : getCacheExpires(5, 'm'); // 5 minutes
 	}
 	else if (_cacheType == 'local') {
-		if (!window.localStorage) return _defaultCache;
-		
-		_cacheStorage = window.localStorage;
-		_cacheExpires = 60 * 60 * 24 * 7;	// 7 days
+		if (!window.localStorage) return _default;		
+		_storage = window.localStorage;
+		_expires= (_span != 0) ? _expires : getCacheExpires(7, 'd'); // 7 days
 	}
 	else if (_cacheType == 'cookie') {
-		_cacheStorage = com.lotte.smp.Cookie(1);
-		_cacheExpires = 60 * 60 * 24 * 1;	// 1 day
+		_storage = com.lotte.smp.Cookie(1);
+		_expires= (_span != 0) ? _expires : getCacheExpires(1, 'd'); // 1 days
 	}
 	else {
-		return _defaultCache;
+		return _default;
+	}
+	
+	function getCacheExpires(s, f) {
+		var exp = 0;
+		switch(f) {
+			case 's' : exp = s;						break;
+			case 'm' : exp = s * 60;				break;
+			case 'h' : exp = s * 60 * 60;			break;
+			case 'd' : exp = s * 60 * 60 * 24;		break;
+			case 'w' : exp = s * 60 * 60 * 24 * 7;	break;
+			case 'M' : exp = s * 60 * 60 * 24 * 30;	break;
+			case 'y' : exp = s * 60 * 60 * 24 * 365;break;
+		}
+		return exp;
 	}
 	
 	return {
 		type	: _cacheType,
-		storage : _cacheStorage,
-		expires : _cacheExpires, 
+		storage : _storage,
+		expires : _expires, 
 		set : function(name, value, expires) {
 			if (typeof name != 'string' || name == '') return;
 			if (value == 'undefined') return;			
