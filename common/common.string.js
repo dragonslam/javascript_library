@@ -5,7 +5,7 @@ String.prototype.equals = function(str) {
     return (this === str);
 }
 String.prototype.isEmpty = function() {
-    return (this === null || this === "");
+    return (this === null || this === "" || this === "undefined");
 }
 String.prototype.isAlphaNum = function() {
 	return (this.search(/[^A-Za-z0-9_-]/) == -1);
@@ -360,7 +360,7 @@ String.prototype.toDate = function() {
 
 Number.prototype.toJSON		=
 Boolean.prototype.toJSON	= 
-String.prototype.toJSON		= function (key) {
+String.prototype.toJSON		= function (key) {sd
 	// jQuery.parseJSON();
 	return '{"'+ key +'" : "'+ this.valueOf() +'"}';
 };
