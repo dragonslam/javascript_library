@@ -3,11 +3,11 @@ var GV_IsConsoleLogging = true;
 function $Logging(msg) {
     if (GV_IsConsoleLogging)
         if (window.console && typeof(window.console) == "object")
-			window.console.log(msg);
+            window.console.log(msg);
         else
             alert(msg);
-	
-	return msg;
+    
+    return msg;
 }
 document.onfocusin = function() {
     if(event.srcElement.tagName=="A"||event.srcElement.tagName=="IMG") document.body.focus(); 
@@ -17,78 +17,78 @@ document.onfocusin = function() {
 * Dynamic script loading 
 /*--------------------------------------------------------------------------------*/
 var LoadScript = function(url, callback, charset, defer, id) {
-	if (typeof url != 'string' || url.isEmpty()) return;
-		
-	var head = document.getElementsByTagName('head')[0];	
-	var script = document.createElement('script');
-	var charset = (charset && typeof charset == 'string') ? charset : 'UTF-8';
-	
-	if (id && typeof id == 'string' && id != ''){
-		script.id = id;
-	}
-	script.src = url;
-	script.charset = charset;
-	script.type = 'text/javascript';
-	script.defer = (defer && typeof defer == 'boolean') ? 'defer' : '';
-	
-	var loaded = false;
-	if (typeof callback == 'function') {
-		script.onreadystatechange = function() {
-			if (this.readyState == 'loaded' || this.readyState == 'complate') {
-				if (loaded) return;
-				callback(true);
-				loaded = true;
-			}
-		};
-		script.onload = function() {
-			callback(true);
-			loaded = true;
-		};
-	}
-	
-	head.appendChild(script);
+    if (typeof url != 'string' || url.isEmpty()) return;
+    
+    var head = document.getElementsByTagName('head')[0];    
+    var script = document.createElement('script');
+    var charset = (charset && typeof charset == 'string') ? charset : 'UTF-8';
+    
+    if (id && typeof id == 'string' && id != ''){
+        script.id = id;
+    }
+    script.src = url;
+    script.charset = charset;
+    script.type = 'text/javascript';
+    script.defer = (defer && typeof defer == 'boolean') ? 'defer' : '';
+    
+    var loaded = false;
+    if (typeof callback == 'function') {
+        script.onreadystatechange = function() {
+            if (this.readyState == 'loaded' || this.readyState == 'complate') {
+                if (loaded) return;
+                callback(true);
+                loaded = true;
+            }
+        };
+        script.onload = function() {
+            callback(true);
+            loaded = true;
+        };
+    }
+    
+    head.appendChild(script);
 };
 
 /*--------------------------------------------------------------------------------*\
 * Mobile device check 
 /*--------------------------------------------------------------------------------*/
 var MobileDevice = function() {
-	
-	if (typeof window.$MobileDevice != 'object') {
-		var nv = window.navigator;
-		var pf = nv.platform;
-		var ua = nv.userAgent;		
-			
-		var _iPad		= (/ipad/i.test(pf));
-		var _iPhone		= (/iphone/i.test(pf));
-		var _iOS		= (_iPad || _iPhone);
-		var _Android	= (/linux armv7/i.test(pf));
-		var _galtab		= (/SHW-M/i.test(ua));	// 갤텝
-		var _Mobile		= (_iOS || _Mobile) ? true : false;
-		var _TouchPad	= (/hp-tablet/gi).test(nv.appVersion);
-		var _HasTouch	= 'ontouchstart' in window && !_TouchPad;
-		
-		window.$MobileDevice = {
-				 navigator	: nv
-				,agent		: ua
-				,platform	: pf
-				,isMobile	: _Mobile
-				,isIos		: _iOS
-				,isIphone	: _iPhone
-				,isIpad		: _iPad
-				,isAndroid	: _Android
-				,isGaltab	: _galtab				
-				,isTouchPad	: _TouchPad
-				,isTouch	: _HasTouch
-				,isTablet	: function() {
-					return (this.isGaltab || ($(window).width() > 640));
-				} 
-				,isWide		: function() {
-					return ($(window).width() > $(window).height());
-				}
-			};
-	}
-	return window.$MobileDevice;
+    
+    if (typeof window.$MobileDevice != 'object') {
+        var nv = window.navigator;
+        var pf = nv.platform;
+        var ua = nv.userAgent;        
+            
+        var _iPad        = (/ipad/i.test(pf));
+        var _iPhone        = (/iphone/i.test(pf));
+        var _iOS        = (_iPad || _iPhone);
+        var _Android    = (/linux armv7/i.test(pf));
+        var _galtab        = (/SHW-M/i.test(ua));    // 갤텝
+        var _Mobile        = (_iOS || _Mobile) ? true : false;
+        var _TouchPad    = (/hp-tablet/gi).test(nv.appVersion);
+        var _HasTouch    = 'ontouchstart' in window && !_TouchPad;
+        
+        window.$MobileDevice = {
+                 navigator    : nv
+                ,agent        : ua
+                ,platform    : pf
+                ,isMobile    : _Mobile
+                ,isIos        : _iOS
+                ,isIphone    : _iPhone
+                ,isIpad        : _iPad
+                ,isAndroid    : _Android
+                ,isGaltab    : _galtab                
+                ,isTouchPad    : _TouchPad
+                ,isTouch    : _HasTouch
+                ,isTablet    : function() {
+                    return (this.isGaltab || ($(window).width() > 640));
+                } 
+                ,isWide        : function() {
+                    return ($(window).width() > $(window).height());
+                }
+            };
+    }
+    return window.$MobileDevice;
 };
 
 /*--------------------------------------------------------------------------------*\
@@ -112,8 +112,8 @@ StringBuilder.prototype = {
 * Dictionary object
 \*--------------------------------------------------------------------------------*/
 function Dictionary(id, value) {
-    this.id		= id;
-	this.value	= value;
+    this.id        = id;
+    this.value    = value;
 }
 Dictionary.prototype = {
     toString : function() {
@@ -129,32 +129,32 @@ Dictionary.prototype = {
 * Reflecte object
 \*--------------------------------------------------------------------------------*/
 var Reflector = function(obj) {
-	if (typeof obj != 'object') return null;
-	
-	return {
-		getProperties : function() {
-			var properties = [];
-			for(var prop in obj) {
-				if (typeof obj[prop] != 'function') properties.push(prop);
-			}
-			return properties;
-		},
-		getMethod : function() {
-			var methods = [];
-			for(var method in obj) {
-				if (typeof obj[method] == 'function') methods.push(method);
-			}
-			return methods;
-		},
-		getOwnMethod : function() {
-			var methods = [];
-			for(var method in obj) {
-				if (typeof obj[method] == 'function' && obj.hasOwnProperty(method)) 
-					methods.push(method);
-			}
-			return methods;
-		}
-	};
+    if (typeof obj != 'object') return null;
+    
+    return {
+        getProperties : function() {
+            var properties = [];
+            for(var prop in obj) {
+                if (typeof obj[prop] != 'function') properties.push(prop);
+            }
+            return properties;
+        },
+        getMethod : function() {
+            var methods = [];
+            for(var method in obj) {
+                if (typeof obj[method] == 'function') methods.push(method);
+            }
+            return methods;
+        },
+        getOwnMethod : function() {
+            var methods = [];
+            for(var method in obj) {
+                if (typeof obj[method] == 'function' && obj.hasOwnProperty(method)) 
+                    methods.push(method);
+            }
+            return methods;
+        }
+    };
 }
 
 /*--------------------------------------------------------------------------------*\
@@ -198,8 +198,8 @@ var Clone = function(obj) {
 * Size object
 \*--------------------------------------------------------------------------------*/
 function Size(x, y) {
-    this.x	= parseInt(x);
-	this.y	= parseInt(y);
+    this.x    = parseInt(x);
+    this.y    = parseInt(y);
 }
 Size.prototype = {
     /*
@@ -209,19 +209,19 @@ Size.prototype = {
         var balance = new Size(0,0);
         if ((this.x != 0 && this.y != 0) && (maxLimit.x != 0 || maxLimit.y != 0) && (this.x > maxLimit.x || this.y > maxLimit.y)) {
 
-            var aW	= (maxLimit.x  > 0) ? (maxLimit.x / this.x) : 1;
-            var aH	= (maxLimit.y  > 0) ? (maxLimit.y / this.y) : 1;
+            var aW    = (maxLimit.x  > 0) ? (maxLimit.x / this.x) : 1;
+            var aH    = (maxLimit.y  > 0) ? (maxLimit.y / this.y) : 1;
 
             if (aW <= aH) {
-                balance.x	= parseInt(this.x * aW);
-                balance.y	= parseInt(this.y * aW);
+                balance.x    = parseInt(this.x * aW);
+                balance.y    = parseInt(this.y * aW);
             } else {
-                balance.x	= parseInt(this.x * aH);
-                balance.y	= parseInt(this.y * aH);
+                balance.x    = parseInt(this.x * aH);
+                balance.y    = parseInt(this.y * aH);
             }
         } else {
-            balance.x	= this.x;
-            balance.y	= this.y;
+            balance.x    = this.x;
+            balance.y    = this.y;
         }
         return balance;
     },
@@ -243,12 +243,12 @@ Size.prototype = {
 * Rectangle object
 \*--------------------------------------------------------------------------------*/
 function Rectangle(x, y, width, height) {
-	this.x = x;
-	this.y = y;
-	this.width = width;
-	this.height = height;
-	this.offsetX = x + width;
-	this.offsetY = y + height;    
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.offsetX = x + width;
+    this.offsetY = y + height;    
 }
 Rectangle.prototype = {
     containPoint : function() {
@@ -289,200 +289,200 @@ Rectangle.prototype = {
 \*--------------------------------------------------------------------------------*/
 var QueryObject = function() {
 
-	if (typeof window.$Query != 'object') {
-		var o	= new Object();		
-		o._encode = function(s) {
-			return encodeURIComponent(s);
-		};
-		o._decode = function(s) {
-			if (!s) return '';				
-			return decodeURIComponent(s.replace(/\+/g, " ")); // 인코딩된 공백문자열을 다시 공백으로
-		};
-		o.getParam = function(name) {
-			return this[name];
-		};
-		o.getQuery = function() {
-			var query = '';
-			for(var q in this) {
-				if (typeof this[q] != 'function') {
-					query += (query ? '&' : '?') + q + '=' + this[q];
-				}
-			}
-			return query;
-		};
-		o.setQuery = function(key, value) {
-			this[key] = value;			
-		};
-		o.getUrl = function() {
-			var loc		= window.document.location;
-			var query	= this.getQuery();		
-			return loc.origin + loc.pathname + query + loc.hash;
-		};
-		
-		var q = location.search.substring(1);
-		if (q) {
-			var vg	= /([^&=]+)=?([^&]*)/g;	// 그룹화 정규식.
-			var tmp;
-			while (tmp = vg.exec(q)) {
-				(function() {
-					var k = o._decode(tmp[1]);
-					var v = o._decode(tmp[2]);
-					var c;
-					if (k) {
-						o[k] = v;
-						//c = k.charAt(0).toUpperCase() + k.slice(1);
-						//o["get" + c] = function() { return v; }
-						//o["set" + c] = function(val) { v = val; }
-					}
-				})();
-			}
-		}
-		window.$Query = o;		
-	}
-	return window.$Query;
+    if (typeof window.$Query != 'object') {
+        var o    = new Object();        
+        o._encode = function(s) {
+            return encodeURIComponent(s);
+        };
+        o._decode = function(s) {
+            if (!s) return '';                
+            return decodeURIComponent(s.replace(/\+/g, " ")); // 인코딩된 공백문자열을 다시 공백으로
+        };
+        o.getParam = function(name) {
+            return this[name];
+        };
+        o.getQuery = function() {
+            var query = '';
+            for(var q in this) {
+                if (typeof this[q] != 'function') {
+                    query += (query ? '&' : '?') + q + '=' + this[q];
+                }
+            }
+            return query;
+        };
+        o.setQuery = function(key, value) {
+            this[key] = value;            
+        };
+        o.getUrl = function() {
+            var loc        = window.document.location;
+            var query    = this.getQuery();        
+            return loc.origin + loc.pathname + query + loc.hash;
+        };
+        
+        var q = location.search.substring(1);
+        if (q) {
+            var vg    = /([^&=]+)=?([^&]*)/g;    // 그룹화 정규식.
+            var tmp;
+            while (tmp = vg.exec(q)) {
+                (function() {
+                    var k = o._decode(tmp[1]);
+                    var v = o._decode(tmp[2]);
+                    var c;
+                    if (k) {
+                        o[k] = v;
+                        //c = k.charAt(0).toUpperCase() + k.slice(1);
+                        //o["get" + c] = function() { return v; }
+                        //o["set" + c] = function(val) { v = val; }
+                    }
+                })();
+            }
+        }
+        window.$Query = o;        
+    }
+    return window.$Query;
 };
 
 /*--------------------------------------------------------------------------------*\
 * Cookie object
 \*--------------------------------------------------------------------------------*/
 var Cookie = function(expiresDay) {
-	var expdate = (typeof expiresDay == 'number') ? expiresDay : 1;	
-	return {
-		get : function(cName) {
-		    cName = cName + '=';
-		    var cookieData = document.cookie;
-		    var start = cookieData.indexOf(cName);
-		    var cValue = '';
-		    if(start != -1){
-		         start += cName.length;
-		         var end = cookieData.indexOf(';', start);
-		         if(end == -1)end = cookieData.length;
-		         cValue = cookieData.substring(start, end);
-		    }
-		    return unescape(cValue);		
-		},
-		set : function(cName, cValue, expireDays) {
-		    this.setOwner(cName, cValue, ((typeof expireDays == 'number' ? expireDays : expdate) * 24 * 60 * 60 * 1000))
-		},
-		setOwner : function(cName, cValue, expire) {			 
-			var expdate = new Date();
-		    expdate.setTime(expdate.getTime() + (typeof expire == 'number' ? expire : (expdate * 24 * 60 * 60 * 1000)));
-		    document.cookie = cName+"=" + cValue + "; path=/; domain="+document.domain+"; expires=" + expdate.toGMTString();
-		},
-		remove : function(name) {
-			this.set(name, '', -1);
-		},
-		getItem : function(name) {
-			return this.get(name);
-		},
-		setItem : function(name, value) {
-			this.set(name, value);
-		},
-		removeItem : function(name) {
-			this.remove(name);
-		}
-	};
-}; 	
+    var expdate = (typeof expiresDay == 'number') ? expiresDay : 1;    
+    return {
+        get : function(cName) {
+            cName = cName + '=';
+            var cookieData = document.cookie;
+            var start = cookieData.indexOf(cName);
+            var cValue = '';
+            if(start != -1){
+                 start += cName.length;
+                 var end = cookieData.indexOf(';', start);
+                 if(end == -1)end = cookieData.length;
+                 cValue = cookieData.substring(start, end);
+            }
+            return unescape(cValue);        
+        },
+        set : function(cName, cValue, expireDays) {
+            this.setOwner(cName, cValue, ((typeof expireDays == 'number' ? expireDays : expdate) * 24 * 60 * 60 * 1000))
+        },
+        setOwner : function(cName, cValue, expire) {             
+            var expdate = new Date();
+            expdate.setTime(expdate.getTime() + (typeof expire == 'number' ? expire : (expdate * 24 * 60 * 60 * 1000)));
+            document.cookie = cName+"=" + cValue + "; path=/; domain="+document.domain+"; expires=" + expdate.toGMTString();
+        },
+        remove : function(name) {
+            this.set(name, '', -1);
+        },
+        getItem : function(name) {
+            return this.get(name);
+        },
+        setItem : function(name, value) {
+            this.set(name, value);
+        },
+        removeItem : function(name) {
+            this.remove(name);
+        }
+    };
+};     
 
 /*--------------------------------------------------------------------------------*\
 * Cache object
 \*--------------------------------------------------------------------------------*/
 var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
-	var _cacheType 	= (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session
-	var _span	= (typeof span == 'number') ? span : 0;
-	var _format	= (typeof format == 'string') ? format : '';
-	var _storage= null;
-	var _expires= getCacheExpires(_span, _format);
-	var _default= {
-			set : function() { return;},
-			get : function() { return '';},
-			isStatus : function() { return false;},
-			remove : function() { return;}
-		};
-	
-	
-	if (_cacheType == 'session') {
-		if (!window.sessionStorage) return _default;		 		
-		_storage= window.sessionStorage;
-		_expires= (_span != 0) ? _expires : getCacheExpires(12, 'h'); // 12 hours
-	} 
-	else if (_cacheType == 'cache') {
-		if (!window.localStorage) return _default;		 		
-		_storage= window.localStorage;
-		_expires= (_span != 0) ? _expires : getCacheExpires(5, 'm'); // 5 minutes
-	}
-	else if (_cacheType == 'local') {
-		if (!window.localStorage) return _default;		
-		_storage = window.localStorage;
-		_expires= (_span != 0) ? _expires : getCacheExpires(7, 'd'); // 7 days
-	}
-	else if (_cacheType == 'cookie') {
-		_storage = com.lotte.smp.Cookie(1);
-		_expires= (_span != 0) ? _expires : getCacheExpires(1, 'd'); // 1 days
-	}
-	else {
-		return _default;
-	}
-	
-	function getCacheExpires(s, f) {
-		var exp = 0;
-		switch(f) {
-			case 's' : exp = s;						break;
-			case 'm' : exp = s * 60;				break;
-			case 'h' : exp = s * 60 * 60;			break;
-			case 'd' : exp = s * 60 * 60 * 24;		break;
-			case 'w' : exp = s * 60 * 60 * 24 * 7;	break;
-			case 'M' : exp = s * 60 * 60 * 24 * 30;	break;
-			case 'y' : exp = s * 60 * 60 * 24 * 365;break;
-		}
-		return exp;
-	}
-	
-	return {
-		type	: _cacheType,
-		storage : _storage,
-		expires : _expires, 
-		set : function(name, value, expires) {
-			if (typeof name != 'string' || name == '') return;
-			if (value == 'undefined') return;			
-			if (expires=='undefined' || typeof expires != 'number') { expires = this.expires; }
-	
-			var date = new Date();
-			var schedule= Math.round((date.setSeconds(date.getSeconds()+expires))/1000);			
-	
-			this.storage.setItem(name, value);
-			this.storage.setItem('time_'+name, schedule);
-		},
-		get : function(name) {			
-			if (this.isStatus(name)) {
-				return this.storage.getItem(name);
-			}
-			else {
-				return '';
-			}
-		},
-		isStatus : function(name) {
-			if (this.storage.getItem(name) == null || this.storage.getItem(name) == '')
-				return false;
-			
-			var date = new Date();
-			var current = Math.round(+date/1000);
-	
-			// Get Schedule
-			var stored_time = this.storage.getItem('time_'+name);
-			if (stored_time=='undefined' || stored_time=='null') { stored_time = 0; }
-	
-			// Expired
-			if (stored_time < current) {	
-				this.remove(name);
-				return false;
-			} else {
-				return true;
-			}
-		},
-		remove : function(name) {			
-			this.storage.removeItem(name);
-			this.storage.removeItem('time_'+name);
-		}
-	};
+    var _cacheType     = (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session
+    var _span    = (typeof span == 'number') ? span : 0;
+    var _format    = (typeof format == 'string') ? format : '';
+    var _storage= null;
+    var _expires= getCacheExpires(_span, _format);
+    var _default= {
+            set : function() { return;},
+            get : function() { return '';},
+            isStatus : function() { return false;},
+            remove : function() { return;}
+        };
+    
+    
+    if (_cacheType == 'session') {
+        if (!window.sessionStorage) return _default;                 
+        _storage= window.sessionStorage;
+        _expires= (_span != 0) ? _expires : getCacheExpires(12, 'h'); // 12 hours
+    } 
+    else if (_cacheType == 'cache') {
+        if (!window.localStorage) return _default;                 
+        _storage= window.localStorage;
+        _expires= (_span != 0) ? _expires : getCacheExpires(5, 'm'); // 5 minutes
+    }
+    else if (_cacheType == 'local') {
+        if (!window.localStorage) return _default;        
+        _storage = window.localStorage;
+        _expires= (_span != 0) ? _expires : getCacheExpires(7, 'd'); // 7 days
+    }
+    else if (_cacheType == 'cookie') {
+        _storage = com.lotte.smp.Cookie(1);
+        _expires= (_span != 0) ? _expires : getCacheExpires(1, 'd'); // 1 days
+    }
+    else {
+        return _default;
+    }
+    
+    function getCacheExpires(s, f) {
+        var exp = 0;
+        switch(f) {
+            case 's' : exp = s;                        break;
+            case 'm' : exp = s * 60;                break;
+            case 'h' : exp = s * 60 * 60;            break;
+            case 'd' : exp = s * 60 * 60 * 24;        break;
+            case 'w' : exp = s * 60 * 60 * 24 * 7;    break;
+            case 'M' : exp = s * 60 * 60 * 24 * 30;    break;
+            case 'y' : exp = s * 60 * 60 * 24 * 365;break;
+        }
+        return exp;
+    }
+    
+    return {
+        type    : _cacheType,
+        storage : _storage,
+        expires : _expires, 
+        set : function(name, value, expires) {
+            if (typeof name != 'string' || name == '') return;
+            if (value == 'undefined') return;            
+            if (expires=='undefined' || typeof expires != 'number') { expires = this.expires; }
+    
+            var date = new Date();
+            var schedule= Math.round((date.setSeconds(date.getSeconds()+expires))/1000);            
+    
+            this.storage.setItem(name, value);
+            this.storage.setItem('time_'+name, schedule);
+        },
+        get : function(name) {            
+            if (this.isStatus(name)) {
+                return this.storage.getItem(name);
+            }
+            else {
+                return '';
+            }
+        },
+        isStatus : function(name) {
+            if (this.storage.getItem(name) == null || this.storage.getItem(name) == '')
+                return false;
+            
+            var date = new Date();
+            var current = Math.round(+date/1000);
+    
+            // Get Schedule
+            var stored_time = this.storage.getItem('time_'+name);
+            if (stored_time=='undefined' || stored_time=='null') { stored_time = 0; }
+    
+            // Expired
+            if (stored_time < current) {    
+                this.remove(name);
+                return false;
+            } else {
+                return true;
+            }
+        },
+        remove : function(name) {            
+            this.storage.removeItem(name);
+            this.storage.removeItem('time_'+name);
+        }
+    };
 };
