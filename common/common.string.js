@@ -106,7 +106,7 @@ String.prototype.startWith = function(str) {
     if (this.equals(str))    return true;
     
     if (str.length > 0)
-        return (str.equals(this.subStr(0, str.length)));
+        return (str.equals(this.substr(0, str.length)));
     else
         return false;
 }
@@ -114,7 +114,7 @@ String.prototype.endWith = function(str) {
     if (this.equals(str))    return true;
     
     if (String(str).length > 0)
-        return (str.equals(this.subStr(this.length - str.length, str.length)));
+        return (str.equals(this.substr(this.length - str.length, str.length)));
     else
         return false;
 }
