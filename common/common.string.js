@@ -1,6 +1,6 @@
 /* common.string.js - String prototype
  	writ by yi seung-yong(dragonslam@nate.com)
- 	date, 2014/09/23
+ 	date, 2012/04/03
 	https://github.com/dragonslam/javascript_library/blob/master/common/common.string.js
 */
 String.prototype.equals = function(str) {
