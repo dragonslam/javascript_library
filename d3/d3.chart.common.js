@@ -496,7 +496,9 @@ com.mad.chart.handler.prototype = {
 
 					g.append("path")
 						.attr("d", arc)
-						.style("fill", function(d) { return color(d.data.name); });
+						.style("fill", function(d) { 
+							return (d.data.depth == i) ? color(d.data.name) : '#fff'; 
+						});
 						
 					if (option.showLabels) {
 						g.append("text")
