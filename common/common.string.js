@@ -1,11 +1,16 @@
-/*--------------------------------------------------------------------------------*\
-* String prototype
-\*--------------------------------------------------------------------------------*/
+/* common.string.js - String prototype
+ 	writ by yi seung-yong(dragonslam@nate.com)
+ 	date, 2014/09/23
+	https://github.com/dragonslam/javascript_library/blob/master/common/common.string.js
+*/
 String.prototype.equals = function(str) {
-    return (this === str);
+    return (this == str);
+}
+String.prototype.nvl = function(s) {
+	return this.isEmpty() ? (s ? s : '') : this+'';
 }
 String.prototype.isEmpty = function() {
-    return (this === null || this === "" || this === "undefined");
+    return (this == null || this == '' || this == 'undefined' || this == 'null');
 }
 String.prototype.isAlphaNum = function() {
     return (this.search(/[^A-Za-z0-9_-]/) == -1);
@@ -33,29 +38,26 @@ String.prototype.isEmail = function() {
 String.prototype.isUrl = function() {
     return (/(file|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/).test(this.trim());
 }
-String.prototype.int = function() {    // 10진수 숫자로 변환.
+String.prototype.Int = function() {    // 10진수 숫자로 변환.
     return this.isFinite() ? parseInt(this, 10) : parseInt("0");
 }
-String.prototype.Int = function() {
-    return this.int();
-}
-String.prototype.float = function() {    
+String.prototype.Float = function() {    
     return this.isFinite() ? parseFloat(this) : parseFloat("0.0");
 }
 String.prototype.parseInt = function() {
-    return String(this.trim().replace(/[^-_0-9]/g, "")).int();
+    return String(this.trim().replace(/[^-_0-9]/g, "")).Int();
 }
 String.prototype.parseFloat = function() {
-    return String(this.trim().replace(/[^-_0-9.0-9]/g, "")).float();
+    return String(this.trim().replace(/[^-_0-9.0-9]/g, "")).Float();
 }
 String.prototype.money = function() 
 { // 숫자에 3자리마다 , 를 찍어서 반환
-    if (this.isNumber()) {
-        var num = this.trim();
-        while((/(-?[0-9]+)([0-9]{3})/).test(num)) {
-            num = num.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
+	var s = (this.nvl('0')).trim();
+    if (s.isNumber()) {        
+        while((/(-?[0-9]+)([0-9]{3})/).test(s)) {
+            s = s.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
         }
-        return num;
+        return s;
     }
     else {
         return this;
@@ -317,38 +319,40 @@ String.prototype.toDate = function() {
         }
     } 
     else {
-        if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(this))
+		var srz = (this.length > 20) ? String(this.split(",")[0]) : this;
+
+        if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(srz))
         {    // yyyy-mm-dd, yyyy/mm/dd
-            s = (this.split("-").length == 3) ? this.split("-") : this.split("/");            
+            s = (srz.split("-").length == 3) ? srz.split("-") : srz.split("/");            
             return new Date(parseInt(s[0]), parseInt(s[1])-1, parseInt(s[2]));        
         }
-        if ((/^\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(this))
+        if ((/^\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(srz))
         {    // yy-mm-dd, yy/mm/dd
-            s = (this.split("-").length == 3) ? this.split("-") : this.split("/");            
+            s = (srz.split("-").length == 3) ? srz.split("-") : srz.split("/");            
             return new Date(1900+parseInt(s[0]), parseInt(s[1])-1, parseInt(s[2]));        
         }
 
-        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-](19|20)\d{2}$/).test(this))
+        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-](19|20)\d{2}$/).test(srz))
         {    // mm-dd-yyyy, mm/dd/yyyy
-            s = (this.split("-").length == 3) ? this.split("-") : this.split("/");            
+            s = (srz.split("-").length == 3) ? srz.split("-") : srz.split("/");            
             return new Date(parseInt(s[2]), parseInt(s[0])-1, parseInt(s[1]));
         }
-        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-]\d{2}$/).test(this))
+        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-]\d{2}$/).test(srz))
         {    // mm-dd-yy, , mm/dd/yy
-            s = (this.split("-").length == 3) ? this.split("-") : this.split("/");
+            s = (srz.split("-").length == 3) ? srz.split("-") : srz.split("/");
             return new Date(parseInt(s[2]), parseInt(s[0])-1, 1900+parseInt(s[1]));
         }
 
-        if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1]) (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this))
+        if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1]) (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(srz))
         {    // yyyy-mm-dd hh:mm:ss, yyyy/mm/dd  hh:mm:ss
-            s = this.split(" ");
+            s = srz.split(" ");
             d = (s[0].split("-").length == 3) ? s[0].split("-") : s[0].split("/");;
             t = s[1].split(":");            
             return new Date(parseInt(d[0]), parseInt(d[1])-1, parseInt(d[2]), parseInt(t[0]), parseInt(t[1]), (t.length == 3 ? parseInt(t[2]) : 0));        
         }
-        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-](19|20)\d{2} (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this))
+        if ((/^(0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])[\/-](19|20)\d{2} (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(srz))
         {    // mm-dd-yyyy hh:mm:ss, mm/dd/yyyy hh:mm:ss
-            s = this.split(" ");
+            s = srz.split(" ");
             d = (s[0].split("-").length == 3) ? s[0].split("-") : s[0].split("/");;
             t = s[1].split(":");
             return new Date(parseInt(d[2]), parseInt(d[0])-1, parseInt(d[1]), parseInt(t[0]), parseInt(t[1]), (t.length == 3 ? parseInt(t[2]) : 0));        
@@ -360,7 +364,7 @@ String.prototype.toDate = function() {
 
 Number.prototype.toJSON        =
 Boolean.prototype.toJSON    = 
-String.prototype.toJSON        = function (key) {sd
+String.prototype.toJSON        = function (key) {
     // jQuery.parseJSON();
     return '{"'+ key +'" : "'+ this.valueOf() +'"}';
 };
@@ -368,19 +372,19 @@ Date.prototype.toJSON = function (key, type) {
     type = typeof(type) == "number" ? type : 0;    
     return String(isFinite(this.valueOf()) ? this.toDateTimeString(type) : "").toJSON(key);
 };
-Object.prototype.toJSON     = function(step) {
+var JSONtoString = function(obj, step) {
     if (typeof step == 'number' && step > 2) return "''";
-    var cnt        = 0;
-    var json    = '';
-    var depth    = (typeof step == 'number') ? step : 0;    
-    for(var prop in this) {
-        if (typeof this[prop] != 'function') {
+    var cnt		= 0;
+    var json		= '';
+    var depth	= (typeof step == 'number') ? step : 0;    
+    for(var prop in obj) {
+        if (typeof obj[prop] != 'function') {
             if (cnt > 0) json += ',';
-            if (typeof this[String(prop)] == 'object') {
-                json+= "'"+ prop +"':"+ Object(this[String(prop)]).toJSON(depth++) +"";
+            if (typeof obj[String(prop)] == 'object') {
+                json+= "'"+ prop +"':"+ JSONtoString(obj[String(prop)], depth++) +"";
             }
             else {
-                json+= "'"+ prop +"':'"+ String(this[String(prop)]).encode() +"'";
+                json+= "'"+ prop +"':'"+ String(obj[String(prop)]).encode() +"'";
             }            
             cnt ++;
         }
