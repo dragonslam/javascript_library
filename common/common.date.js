@@ -1,6 +1,8 @@
-/*--------------------------------------------------------------------------------*\
-* Date prototype
-\*--------------------------------------------------------------------------------*/
+/* common.date.js - Date prototype
+ 	writ by yi seung-yong(dragonslam@nate.com)
+ 	date, 2012/09/23
+	https://github.com/dragonslam/javascript_library/blob/master/common/common.date.js
+*/
 Date.prototype.addSeconds = function(seconds) {
     return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds() + seconds);
 }
@@ -64,13 +66,13 @@ Date.prototype.toDateString = function(type) {
     var f = "yyyyMMdd";
 
     switch (type) {
-        case  0    : f = "yyyyMMdd";        break;
-        case  1    : f = "yyyy-MM-dd";        break;
-        case  2    : f = "yyyy/MM/dd";        break;
-        case 10    : f = "yyyy년 MM월 dd일 E2"    break;
-        case 11    : f = "yy-MM-dd E1"        break;
-        case 12    : f = "yy/MM/dd E0"        break;
-        default    : f = "yy년 MM월 dd일";
+        case	0	: f = "yyyyMMdd";			break;
+        case	1	: f = "yyyy-MM-dd";			break;
+        case	2	: f = "yyyy/MM/dd";			break;
+        case	10	: f = "yyyy년 MM월 dd일";	break;
+        case	11	: f = "yyyy-MM-dd";			break;
+        case	12	: f = "yyyy/MM/dd";			break;
+        default	: f = "yy년 MM월 dd일";	break;
     }
     return this.format(f);
 }
@@ -134,16 +136,16 @@ Date.prototype.format = function (f) {
     return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p)/gi, function ($1) {
         switch ($1) {
             case "yyyy": return d.getFullYear();
-            case "yy": return (d.getFullYear() % 1000).digit(2);
-            case "MM": return (d.getMonth() + 1).digit(2);
-            case "dd": return d.getDate().digit(2);
+            case "yy": return String(d.getFullYear() % 1000).digits(2);
+            case "MM": return String(d.getMonth() + 1).digits(2);
+            case "dd": return String(d.getDate()).digits(2);
             case "E0": return d.getDay().toWeekName(0);
             case "E1": return d.getDay().toWeekName(1);
             case "E2": return d.getDay().toWeekName(2);            
-            case "HH": return d.getHours().digit(2);
-            case "hh": return ((h = d.getHours() % 12) ? h : 12).digit(2);
-            case "mm": return d.getMinutes().digit(2);
-            case "ss": return d.getSeconds().digit(2);
+            case "HH": return String(d.getHours()).digits(2);
+            case "hh": return String((h = d.getHours() % 12) ? h : 12).digits(2);
+            case "mm": return String(d.getMinutes()).digits(2);
+            case "ss": return String(d.getSeconds()).digits(2);
             case "a/p": return d.getHours().toMeridiem(2);
             default: return $1;
         }
