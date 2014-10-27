@@ -1,23 +1,20 @@
-var GV_IsConsoleLogging = true;
-
-function $Logging(msg) {
-    if (GV_IsConsoleLogging)
-        if (window.console && typeof(window.console) == "object")
-            window.console.log(msg);
-        else
-            alert(msg);
-    
-    return msg;
+/* common.function.js - MAD common script
+ 	writ by yi seung-yong(dragonslam@nate.com)
+ 	date, 2012/04/03
+	https://github.com/dragonslam/javascript_library/blob/master/common/common.js
+*/
+if (typeof console == 'undefined') {
+	window.logStack	= new Array();
+	window.console	= {"log" : function(s) {logStack.push(s);}}
 }
-document.onfocusin = function() {
-    if(event.srcElement.tagName=="A"||event.srcElement.tagName=="IMG") document.body.focus(); 
-}
+var $isDebug	= true;
+var $debug		= function(msg) {if ($isDebug) {window.console.log(msg);}};
 
 /*--------------------------------------------------------------------------------*\
 * Dynamic script loading 
 /*--------------------------------------------------------------------------------*/
 var LoadScript = function(url, callback, charset, defer, id) {
-    if (typeof url != 'string' || url.isEmpty()) return;
+    if (typeof url != 'string' || url === '' || url === 'undefined') return;
     
     var head = document.getElementsByTagName('head')[0];    
     var script = document.createElement('script');
@@ -94,8 +91,7 @@ var MobileDevice = function() {
 /*--------------------------------------------------------------------------------*\
 * StringBuilder object
 \*--------------------------------------------------------------------------------*/
-var StringBuilder = function()
-{ 
+var StringBuilder = function() { 
     this.buffer = [];
 }
 StringBuilder.prototype = {
@@ -120,7 +116,7 @@ Dictionary.prototype = {
         return "id:"+ this.id +", value:"+ this.value;
     },
     logging : function() {
-        return $Logging(this.toString());
+        return $debug(this.toString());
     }
 }
 
@@ -235,7 +231,7 @@ Size.prototype = {
         return "x:"+ this.x +",y:"+ this.y;
     },
     logging : function()  {
-        return $Logging(this.toString());
+        return $debug(this.toString());
     }
 }
 
@@ -280,14 +276,14 @@ Rectangle.prototype = {
         return "x:"+ this.x +",y:"+ this.y +",width:"+ this.width +",height:"+ this.height;
     },
     logging : function()  {
-        return $Logging(this.toString());
+        return $debug(this.toString());
     }
 };
 
 /*--------------------------------------------------------------------------------*\
-* QueryObject object
+* Query object
 \*--------------------------------------------------------------------------------*/
-var QueryObject = function() {
+var Query = function() {
 
     if (typeof window.$Query != 'object') {
         var o    = new Object();        
@@ -363,6 +359,7 @@ var Cookie = function(expiresDay) {
         },
         set : function(cName, cValue, expireDays) {
             this.setOwner(cName, cValue, ((typeof expireDays == 'number' ? expireDays : expdate) * 24 * 60 * 60 * 1000))
+			return this;
         },
         setOwner : function(cName, cValue, expire) {             
             var expdate = new Date();
@@ -370,7 +367,7 @@ var Cookie = function(expiresDay) {
             document.cookie = cName+"=" + cValue + "; path=/; domain="+document.domain+"; expires=" + expdate.toGMTString();
         },
         remove : function(name) {
-            this.set(name, '', -1);
+            return this.set(name, '', -1);
         },
         getItem : function(name) {
             return this.get(name);
@@ -380,7 +377,10 @@ var Cookie = function(expiresDay) {
         },
         removeItem : function(name) {
             this.remove(name);
-        }
+        },
+		clear : function() {
+			return;
+		}
     };
 };     
 
@@ -388,16 +388,17 @@ var Cookie = function(expiresDay) {
 * Cache object
 \*--------------------------------------------------------------------------------*/
 var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
-    var _cacheType     = (typeof name != 'string' || name == '') ? 'local' : type; // cache || local || session
-    var _span    = (typeof span == 'number') ? span : 0;
-    var _format    = (typeof format == 'string') ? format : '';
-    var _storage= null;
-    var _expires= getCacheExpires(_span, _format);
-    var _default= {
+    var _cacheType	= (typeof type != 'string' || type == '') ? 'cache' : type; // cache || local || session
+    var _span		= (typeof span == 'number') ? span : 0;
+    var _format		= (typeof format == 'string') ? format : '';
+    var _storage	= null;
+    var _expires	= getCacheExpires(_span, _format);
+    var _default	= {
             set : function() { return;},
             get : function() { return '';},
             isStatus : function() { return false;},
-            remove : function() { return;}
+            remove : function() { return; },
+			clear : function() { return; }
         };
     
     
@@ -408,7 +409,7 @@ var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
     } 
     else if (_cacheType == 'cache') {
         if (!window.localStorage) return _default;                 
-        _storage= window.localStorage;
+        _storage= window.sessionStorage;
         _expires= (_span != 0) ? _expires : getCacheExpires(5, 'm'); // 5 minutes
     }
     else if (_cacheType == 'local') {
@@ -450,26 +451,28 @@ var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
             var date = new Date();
             var schedule= Math.round((date.setSeconds(date.getSeconds()+expires))/1000);            
     
-            this.storage.setItem(name, value);
-            this.storage.setItem('time_'+name, schedule);
+            this.storage.setItem(this.type +'@'+ name, value);
+            this.storage.setItem(this.type +'@time_' + name, schedule);
+
+			return this;
         },
         get : function(name) {            
             if (this.isStatus(name)) {
-                return this.storage.getItem(name);
+                return this.storage.getItem(this.type +'@'+ name);
             }
             else {
                 return '';
             }
         },
         isStatus : function(name) {
-            if (this.storage.getItem(name) == null || this.storage.getItem(name) == '')
+            if (this.storage.getItem(this.type +'@'+ name) == null || this.storage.getItem(this.type +'@'+ name) == '')
                 return false;
             
             var date = new Date();
             var current = Math.round(+date/1000);
     
             // Get Schedule
-            var stored_time = this.storage.getItem('time_'+name);
+            var stored_time = this.storage.getItem(this.type +'@time_' + name);
             if (stored_time=='undefined' || stored_time=='null') { stored_time = 0; }
     
             // Expired
@@ -481,8 +484,16 @@ var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
             }
         },
         remove : function(name) {            
-            this.storage.removeItem(name);
-            this.storage.removeItem('time_'+name);
-        }
+            this.storage.removeItem(this.type +'@'+ name);
+            this.storage.removeItem(this.type +'@time_' + name);
+        },
+		clear : function() {
+			for (var item in this.storage) {
+				if (String(item).startWith(this.type)) {
+					this.storage.removeItem(item);
+				}
+			}
+			//this.storage.clear();
+		}
     };
 };
