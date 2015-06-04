@@ -10,6 +10,16 @@ var $isDebug	= true;
 var $debug		= function(msg) {if ($isDebug) {window.console.log(msg);}};
 
 /*--------------------------------------------------------------------------------*\
+* Find Object 
+/*--------------------------------------------------------------------------------*/
+var $O = function(objectID) {
+	if (String(objectID).isEmpty()) 
+		return false;
+	else 
+	return document.getElementById(objectID);
+}
+
+/*--------------------------------------------------------------------------------*\
 * Dynamic script loading 
 /*--------------------------------------------------------------------------------*/
 var LoadScript = function(url, callback, charset, defer, id) {
@@ -102,7 +112,6 @@ StringBuilder.prototype = {
     }
 }
 
-
 /*--------------------------------------------------------------------------------*\
 * Dictionary object
 \*--------------------------------------------------------------------------------*/
@@ -118,7 +127,6 @@ Dictionary.prototype = {
         return $debug(this.toString());
     }
 }
-
 
 /*--------------------------------------------------------------------------------*\
 * Reflecte object
@@ -497,3 +505,46 @@ var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
     };
 };
 
+
+/*--------------------------------------------------------------------------------*\
+* Set Value to Object
+\*--------------------------------------------------------------------------------*/
+var SetValue = function(objectID, value) {
+	if (String(objectID).isEmpty()) return;
+	var o = $O(objectID);
+	if (o) {
+		$debug("<" + o.tagName + " name='"+ objectID +"'> : "+ value);
+		switch (o.tagName) {
+			case "INPUT":
+					switch (o.type) {
+					case "text" :
+						o.value = value;
+						break;
+					case "radio" :					
+						o.checked = (o.value == value);
+						break;
+					case "checkbox" :
+						o.checked = (o.value == value);
+						break;
+					}
+				break;
+			case "SELECT":
+				o.value = value;
+				break;
+			case "SPAN":
+				if ($("#"+objectID).attr("controlType") == "radioList") {
+					$("#"+objectID+" input:radio[value='"+value+"']").attr("checked",true);
+				}
+				else if ($("#"+objectID).attr("controlType") == "checkList") {
+					$("#"+objectID+" input:checkbox[value='"+value+"']").attr("checked",true);
+				}
+				else {
+					o.innerText = value;
+				}
+				break;
+			default :
+				o.innerText = value;
+				break;
+		}
+	}
+}
