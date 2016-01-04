@@ -1,4 +1,4 @@
-/* d3.chart.setting.js - D3 Chart Common Library.
+/* d3.chart.common.js - D3 Chart Common Library.
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2014/10/04
 */
