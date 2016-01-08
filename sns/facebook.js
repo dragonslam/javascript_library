@@ -1,4 +1,4 @@
-// sns.js
+// facebook.js
 // need snsSettings
 if (typeof console == "undefined") {    
 	window.logStack = new Array();
