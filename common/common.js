@@ -497,3 +497,353 @@ var Cache = function(type, span/* integer */, format/* s, m, h, d, M, y, w */) {
 		}
     };
 };
+
+
+
+var fn_bindFormValidator = function() {
+	String.prototype.equals = function(str) {
+	    return (this === str);
+	};
+	String.prototype.isFinite = function() {
+	    return isFinite(this);
+	};
+	String.prototype.startWith = function(str) {
+	    if (this.equals(str))    return true;
+	    
+	    if (str.length > 0)
+	        return (str.equals(this.substr(0, str.length)));
+	    else
+	        return false;
+	};
+	String.prototype.endWith = function(str) {
+	    if (this.equals(str))    return true;
+	    
+	    if (String(str).length > 0)
+	        return (str.equals(this.substr(this.length - str.length, str.length)));
+	    else
+	        return false;
+	};
+	String.prototype.bytes = function() {
+	    var b = 0;
+	    for (var i=0; i<this.length; i++) b += (this.charCodeAt(i) > 128) ? 2 : 1;
+	    return b;
+	};
+	String.prototype.isPhone = function() {
+	    var arg = arguments[0] ? arguments[0] : "";
+	    return eval("(/(02|0[3-9]{1}[0-9]{1})" + arg + "[1-9]{1}[0-9]{2,3}" + arg + "[0-9]{4}$/).test(this)");
+	};
+	String.prototype.isMobile = function() {
+	    var arg = arguments[0] ? arguments[0] : "";
+	    return eval("(/01[016789]" + arg + "[1-9]{1}[0-9]{2,3}" + arg + "[0-9]{4}$/).test(this)");
+	};
+	String.prototype.isKor = function() {
+	    return (/^[가-힣]+$/).test(this.remove(arguments[0])) ? true : false;
+	};
+	String.prototype.isEmail = function() {
+	    return (/\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/).test(this.trim());
+	};
+	String.prototype.isUrl = function() {
+	    return (/(file|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/).test(this.trim());
+	};
+	String.prototype.isAlphaNum = function() {
+	    return (this.search(/[^A-Za-z0-9_-]/) == -1);
+	};
+	String.prototype.isAlpha = function() {
+	    return (this.search(/[^A-Za-z]/) == -1);
+	};
+	String.prototype.parseInt = function() {
+		if (this === '' || this === undefined) return 0;		
+		if (isFinite(this)) {
+			return parseInt(this, 0);
+		}
+		else {
+			return this.trim().replace(/[^-_0-9]/g, "").parseInt();
+		}
+	};
+	String.prototype.parseFloat = function() {
+		if (this === '' || this === undefined) return 0.0;
+		
+		var result = this.trim().replace(/[^-_0-9.0-9]/g, "");
+		if (result !== "") {
+			return parseFloat(result);	
+		}
+		else {
+			return "";
+		}
+	};
+	String.prototype.replaceXss = function(source, target) {
+		source = source.replace(new RegExp("(\\W)", "g"), "\\$1");
+		target = target.replace(new RegExp("\\$", "g"), "$$$$");
+		return this.replace(new RegExp(source, "gm"), target);
+	};	
+
+	if (!Number.toLocaleString) {
+		Number.prototype.toLocaleString = function() {
+			var s = String(this);
+		    if (s.isFinite()) {        
+		        while((/(-?[0-9]+)([0-9]{3})/).test(s)) {
+		            s = s.replace((/(-?[0-9]+)([0-9]{3})/), "$1,$2");
+		        }
+		    }
+	        return s;
+		};
+	}
+	var messageCodes = {
+		 "MSG0001" : "특수문자 <{(%'\")}> 는 사용할 수 없습니다.",
+		 "MSG0002" : "자 이상은 등록 할 수 없습니다."
+	};
+	var messagePrint = function(obj, msgID, msg) {
+		if (obj instanceof $) {
+			var oMsg = obj.html();
+			var cMsg = obj.attr("handelMsgId");
+			var nMsg = msgID;
+			var hide = (obj.css("display") == "none");
+			if (cMsg != nMsg) {
+				if (hide) {
+					obj.show();	
+				}
+				obj.html("<span style='color:red;'>"+ (typeof msg == "string" ? msg : "") + messageCodes[nMsg] +"</span>");
+				obj.attr("handelMsgId", nMsg);
+				window.setTimeout(function() {
+					obj.attr("handelMsgId", "");
+					obj.html(oMsg);
+					if (hide) {
+						obj.hide();	
+					}
+				}, 3000);
+			}
+		}
+	};
+	var cleanXss = function(str){
+		if(typeof str === "string" && str !== ""){
+			if (!isNaN(str)) {
+				return str;
+			}
+			var tmp = String(str);
+			if (tmp === "") {
+				return str;
+			}
+			tmp = tmp.replaceXss("<", "").replaceXss(">", "");
+			tmp = tmp.replaceXss("(", "").replaceXss(")", "");
+			tmp = tmp.replaceXss("{", "").replaceXss("}", "");
+			tmp = tmp.replaceXss("%", "").replaceXss("&", "");
+			tmp = tmp.replaceXss("'", "").replaceXss('"', "");
+			tmp = tmp.replaceXss("//", "");
+			return tmp;
+		}
+		return str;
+	};
+	
+	// 등록값 점검.
+	var keyupValidator = function(obj, vType) {
+		if (obj instanceof $) {
+			obj.keyup(function() {
+				var o		= $(this);
+				var vChar	= o.attr("validator-cleanChar");
+				var vTraget	= o.attr("validator-target");
+				var oTarget = $("#"+ vTraget);
+				var oValue	= o.val();
+				var oResult	= "";
+				
+				if (vType == "cleanText") {				
+					oResult	= cleanXss(oValue);
+					if (vChar !== "" && vChar !== undefined) {
+						var chars = vChar.split(",");
+						for (var i = 0; i < chars.length; i++) {
+							oResult = oResult.replaceXss(chars[i], "");
+						}
+					}
+					if (oValue !== "" && oValue !== oResult) {
+						if (oTarget && oTarget.length > 0) {
+							messagePrint(oTarget, "MSG0001");
+						}
+						o.val(oResult);
+					}
+				}
+				else if (vType == "number") {
+					if (oValue != "") {
+						oResult = oValue.match(/[0-9]/g).join("");
+						//oResult = oValue.parseInt();
+						if (oValue != oResult) obj.val(oResult);
+					}
+				}
+				else if (vType == "float") {
+					if (!oValue.endWith('.')) {
+						oResult = oValue.parseFloat();
+						if (oValue != oResult) obj.val(oResult);
+					}				
+			    }		           
+			});			
+		}
+	};
+	// 특정값 등록 방지.
+	var keydownValidator = function(obj, vType) {
+		if (obj instanceof $) {
+			// alpabat alpaNum number float
+			obj.keydown(function(e) {
+				var obj		= $(this);
+				var isValid	= true;
+				//var oValue	= String(obj.val());
+				e = (e ? e : event);
+				var keyCd = e.keyCode;
+				vType	= obj.attr("validator-type");
+			   
+			    if (vType == "number" && (
+			    		keyCd != 8 && keyCd != 9 && keyCd != 46 &&
+			    		(keyCd < 48 || keyCd > 57) &&
+			    		(keyCd < 96 || keyCd > 105)
+			    )){
+			    	isValid = false;
+			    } 
+			    else if (vType == "float" && (
+			    		keyCd != 8 && keyCd != 9 && keyCd != 46 &&
+			    		keyCd != 110 && keyCd != 190 &&
+			    		(keyCd < 48 || keyCd > 57) &&
+			    		(keyCd < 96 || keyCd > 105)
+			    )){
+			    	isValid = false;
+			    }		    	
+		    	if(!isValid) {
+		    		e.returnValue=false;
+		    		return false;
+		    	}		           
+			});
+		}
+	};
+	var lengthValidator = function(obj, vLength) {
+		if (obj instanceof $ && vLength > 0) {
+			obj.blur(function() {
+				var o		= $(this);				
+				var vTraget	= o.attr("validator-target");
+				var oTarget = $("#"+ vTraget);
+				var oValue	= o.val();
+				if (oValue !== "" && oValue.length > vLength) {
+					o.val(oValue.substring(0, vLength));
+					if (oTarget && oTarget.length > 0) {
+						messagePrint(oTarget, "MSG0002", vLength);
+					}
+				}
+			});
+		}
+	};
+	var numberFormatter = function(obj, vType, isFormat) {
+		isFormat = isFormat ? isFormat : false;
+		if (obj instanceof $) {
+			obj.css("text-align", "right");
+			obj.focus(function() {
+				var o		= $(this);
+				var oValue	= o.val();
+				if (oValue !== "" && oValue.length > 0) {
+					o.val(oValue.replaceAll(",", ""));					
+				}
+			});
+			obj.blur(function() {
+				var o		= $(this);
+				var oValue	= String(o.val());
+				if (oValue !== "" && oValue.length > 0) {
+					
+					if (vType == "number") {
+						if (oValue != "") {
+							oValue = oValue.match(/[0-9]/g).join("");
+							//oValue = oValue.parseInt();
+						}
+					}
+					else if (vType == "float") {
+						oValue = oValue.parseFloat();
+					}
+					if (!isFormat) {
+						o.val(oValue);
+					}
+					else {
+						o.val(oValue.toLocaleString());
+					}
+				}
+			});
+		}
+	};
+	
+	var setValidator = function(obj) {
+		if (obj instanceof $) {
+			var vType	= String(obj.attr("validator-type")),
+				vLength	= String(obj.attr("validator-length")),
+				vFormat	= String(obj.attr("validator-format")).toLowerCase(),
+				isFormat= (vFormat === "y" || vFormat === "yes" || vFormat === "use");
+			
+			if (vType !== "" && vType !== undefined) {
+				switch (vType) {
+					case "text" 	 : 
+						keyupValidator(obj, vType);
+						break;			
+					case "cleanText" : 
+						keyupValidator(obj, vType);
+						break;
+					case "alpabat"	 : 
+						keydownValidator(obj, vType);
+						break;
+					case "alpaNum"	 : 
+						keydownValidator(obj, vType);
+						break;
+					case "number" 	 :				
+						keyupValidator(obj, vType);
+						keydownValidator(obj, vType);						
+						numberFormatter(obj, vType, isFormat);
+						break;
+					case "float"	 : 
+						keyupValidator(obj, vType);
+						keydownValidator(obj, vType);
+						numberFormatter(obj, vType, isFormat);
+						break;
+				}
+			}
+			if (vLength !== "" && vLength !== undefined) {
+				vLength = parseInt(vLength, 10);
+				if (vLength > 0) {
+					lengthValidator(obj, vLength);
+				}
+			}
+		}
+	};
+	
+	if (arguments.length > 0) {
+		for (var i = 0; i < arguments.length; i++) {
+			var arg = arguments[i];
+			if (arg instanceof $ && arg.length > 0) {
+				if (arg.length == 1) {
+					setValidator(arg);
+				}
+				else {
+					arg.each(function() {
+						setValidator($(this));
+					});
+				}			
+			}
+			else if (typeof arg == "object") {
+				if (arg.obj instanceof $) {
+					if (arg.type)
+						arg.obj.attr("validator-type", arg.type);
+					if (arg.length)
+						arg.obj.attr("validator-length", arg.length);
+					if (arg.target)
+						arg.obj.attr("validator-target", arg.target);
+					if (arg.clean)
+						arg.obj.attr("validator-cleanChar", arg.clean);
+					
+					setValidator(arg.obj);
+				}
+				else {
+					// TO-DO : JSON....
+				}
+			}
+			else if (typeof arg == "string") {
+				if ($("#"+arg).length > 0) {
+					w.fn_bindFormValidator($("#"+arg));
+				}	
+			}
+		}
+	}
+	else {
+		$("input[type='text'][validator='true']").each(function() {
+			w.fn_bindFormValidator($(this));			
+		}); 
+	}
+};
