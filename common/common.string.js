@@ -126,6 +126,12 @@ String.prototype.bytes = function()
     for (var i=0; i<this.length; i++) b += (this.charCodeAt(i) > 128) ? 2 : 1;
     return b;
 }
+String.prototype.getBytesLength = function() 
+{
+    var s = this;
+    for(b = i = 0;c = s.charCodeAt(i++);b += c >> 11 ? 3 : c >> 7 ? 2 : 1);
+    return b;
+}
 if (typeof "$".trim != 'function') {
     String.prototype.trim = function() {    // 공백 제거
         return this.replace(/(^\s*)|(\s*$)/g, "");
