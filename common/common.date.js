@@ -3,43 +3,57 @@
  	date, 2012/09/23
 	https://github.com/dragonslam/javascript_library/blob/master/common/common.date.js
 */
+Date.prototype.addDate = function(yy, mm, dd, hh, mi, ss, ms) {
+	return new Date(
+			this.getFullYear()	+ (yy||0),
+			this.getMonth() 	+ (mm||0),
+			this.getDate() 		+ (dd||0),
+			this.getHours() 	+ (hh||0),
+			this.getMinutes() 	+ (mi||0),
+			this.getSeconds() 	+ (ss||0),
+			this.getMilliseconds() + (ms||0)
+	);
+};
+Date.prototype.addTimes = function(hours, miniutes, seconds, mss) {
+	return this.addDate(0, 0, 0, hours||0, miniutes||0, seconds||0, mss||0);
+};
 Date.prototype.addSeconds = function(seconds) {
-    return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds() + seconds);
-}
+	return this.addTimes(0, 0, seconds);
+};
 Date.prototype.addMinutes = function(minutes) {
-    return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours(), this.getMinutes() + minutes, this.getSeconds());
-}
+	return this.addTimes(0, minutes);
+};
 Date.prototype.addHours = function(hours) {
-    return new Date(this.getFullYear(), this.getMonth(), this.getDate(), this.getHours() + hours, this.getMinutes(), this.getSeconds());
-}
+	return this.addTimes(hours);
+};
 Date.prototype.addDay = function(day) {
-    return new Date(this.getFullYear(), this.getMonth(), this.getDate() + day, this.getHours(), this.getMinutes(), this.getSeconds());
-}
+	return this.addDate(0, 0, day);
+};
 Date.prototype.addMonth = function(month) {
-    return new Date(this.getFullYear(), this.getMonth() + month, this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds());
-}
+	return this.addDate(0, month);
+};
 Date.prototype.addYear = function(year) {
-    return new Date(this.getFullYear() + year, this.getMonth(), this.getDate(), this.getHours(), this.getMinutes(), this.getSeconds());
-}
+	return this.addDate(year);
+};
 Date.prototype.now = function() {
     return new Date();
-}
+};
 Date.prototype.parseDate = function(dateString, spliter) {
     var arr = dateString.split(spliter);
     if (arr.length == 3)
         return new Date(String(arr[0]).Int(), String(arr[1]).Int()-1, String(arr[2]).Int());
     else
         return null;
-}
+};
 Date.prototype.compare = function(date) 
 {    // 현재 날짜가 date보다 이전이면 -1, 같으면 0, 이후이면 1이다.
     var cVal = this.calculator(date);
     return (cVal == 0) ? 0 : ((cVal > 0) ? 1 : -1);
-}
+};
 Date.prototype.calculator = function(date) 
 {    // 지정된 날자에서 date 만큼을 빼준다. 
     return this - date;
-}
+};
 Date.prototype.getLastDay = function() 
 {    // 해당월의 마지막 일을 반환.
     var days = "31,28,31,30,31,30,31,31,30,31,30,31";
@@ -47,20 +61,20 @@ Date.prototype.getLastDay = function()
         return 29;
     else
         return String(days.split(',')[this.getMonth()]).Int();
-}
+};
 Date.prototype.isLeapYear = function() 
 {    // 윤년인지 검사.
     var year = (this.getFullYear() < 1900) ? this.getFullYear() + 1900 : this.getFullYear();
     return ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
-}
+};
 Date.prototype.getQuarter = function() 
 {    // 분기 반환.
     return (parseInt(this.getMonth() / 3) + 1); 
-}
+};
 Date.prototype.getHalf = function() 
 {    // 반기 반환. 
     return (parseInt(this.getMonth() / 6) + 1);
-}
+};
 Date.prototype.toDateString = function(type) {
     type = typeof(type) == "number" ? type : 0;    
     var f = "yyyyMMdd";
@@ -75,7 +89,7 @@ Date.prototype.toDateString = function(type) {
         default	: f = "yy년 MM월 dd일";	break;
     }
     return this.format(f);
-}
+};
 Date.prototype.toDateTimeString = function(type) {
     type = typeof(type) == "number" ? type : 0;    
     var f = "hhmmss";
@@ -90,7 +104,7 @@ Date.prototype.toDateTimeString = function(type) {
         default    : f = "hh시 mm분 ss초";    break;
     }
     return this.toDateString(type) +" "+ this.format(f); 
-}
+};
 
 Number.prototype.toWeekName = function(type) {    
     var weeks = "";
@@ -102,14 +116,40 @@ Number.prototype.toWeekName = function(type) {
         weeks = "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday".split(",");
 
     return weeks[this];
-}
+};
 String.prototype.toWeekName = function(type) {
     return this.isFinite() ? parseInt(this).toWeekName(type) : '';
-} 
+} ;
 Date.prototype.toWeekName = function(type) {
     return this.getDay().toWeekName();
-}
+};
+Date.prototype.getWeek = function() 
+{	// 년 주자 반환.
+	if (!this.valueOf()) return '';
+	
+	var date = new Date(this.getTime()); 
+	date.setHours(0, 0, 0, 0); 
+	date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); 
 
+	var week = new Date(date.getFullYear(), 0, 4); 
+	return Math.round(((date.getTime() - week.getTime()) / 86400000 - 3 + (week.getDay() + 6) % 7) / 7) + 1; 
+};
+Date.prototype.getWeekOfMonth = function() 
+{	// 월 주자 반환.
+	if (!this.valueOf()) return '';
+	
+	var oDate = new Date(this.getTime()),
+		sDate = oDate.addDay(-oDate.getDate()+1);
+
+	var weekCnt = 0, isFlag = false;
+	while( !isFlag ) {
+		var std = sDate.addDay((weekCnt*7)),
+			etd = sDate.addDay((weekCnt*7)+7);		
+		isFlag	= (oDate.compare(std) > -1 && oDate.compare(etd) < 0);
+		weekCnt++;
+	}	
+	return weekCnt; 
+};
 Number.prototype.toMeridiem = function(type) {    
     var meridiem = "";
     if (type == 1)
@@ -120,13 +160,13 @@ Number.prototype.toMeridiem = function(type) {
         meridiem = "am,pm".split(",");
 
     return meridiem[(this > 12 ? 1 : 0)];
-}
+};
 String.prototype.toMeridiem = function(type) {
     return this.isFinite() ? parseInt(this).toMeridiem(type) : '';
-} 
+};
 Date.prototype.toMeridiem = function(type) {
     return this.getHours().toMeridiem();
-}
+};
 
 Date.prototype.format = function (f) {
 
