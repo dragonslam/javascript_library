@@ -125,18 +125,24 @@ Date.prototype.toWeekName = function(type) {
 };
 Date.prototype.getWeek = function() 
 {	// 년 주자 반환.
-	if (!this.valueOf()) return '';
+	if (!this.valueOf()) return 0;
 	
-	var date = new Date(this.getTime()); 
-	date.setHours(0, 0, 0, 0); 
-	date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); 
-
-	var week = new Date(date.getFullYear(), 0, 4); 
-	return Math.round(((date.getTime() - week.getTime()) / 86400000 - 3 + (week.getDay() + 6) % 7) / 7) + 1; 
+	var oDate = new Date(this.getTime());
+		oDate.setHours(0, 0, 0, 0);
+	var sDate = new Date(oDate.getFullYear(), 0, 1);
+	 
+	var weekCnt = 0, isFlag = false;
+	while( !isFlag ) {
+		var std = sDate.addDay((weekCnt*7)),
+			etd = sDate.addDay((weekCnt*7)+7);		
+		isFlag	= (oDate.compare(std) > -1 && oDate.compare(etd) < 0);
+		weekCnt++;
+	}	
+	return weekCnt;  
 };
 Date.prototype.getWeekOfMonth = function() 
 {	// 월 주자 반환.
-	if (!this.valueOf()) return '';
+	if (!this.valueOf()) return 0;
 	
 	var oDate = new Date(this.getTime()),
 		sDate = oDate.addDay(-oDate.getDate()+1);
