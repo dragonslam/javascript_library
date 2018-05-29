@@ -146,7 +146,6 @@ Date.prototype.getWeekOfMonth = function()
 	
 	var oDate = new Date(this.getTime()),
 		sDate = oDate.addDay(-oDate.getDate()+1);
-
 	var weekCnt = 0, isFlag = false;
 	while( !isFlag ) {
 		var std = sDate.addDay((weekCnt*7)),
@@ -154,6 +153,9 @@ Date.prototype.getWeekOfMonth = function()
 		isFlag	= (oDate.compare(std) > -1 && oDate.compare(etd) < 0);
 		weekCnt++;
 	}	
+	if (sDate.getDay() >= 1) {
+		weekCnt++;	// 매월 1일이 주중일 경우 시작 주일을 추가.
+	}
 	return weekCnt; 
 };
 Number.prototype.toMeridiem = function(type) {    
