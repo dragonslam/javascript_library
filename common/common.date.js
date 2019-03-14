@@ -153,9 +153,6 @@ Date.prototype.getWeekOfMonth = function()
 		isFlag	= (oDate.compare(std) > -1 && oDate.compare(etd) < 0);
 		weekCnt++;
 	}	
-	if (sDate.getDay() >= 1) {
-		weekCnt++;	// 매월 1일이 주중일 경우 시작 주일을 추가.
-	}
 	return weekCnt; 
 };
 Number.prototype.toMeridiem = function(type) {    
@@ -175,27 +172,26 @@ String.prototype.toMeridiem = function(type) {
 Date.prototype.toMeridiem = function(type) {
     return this.getHours().toMeridiem();
 };
-
 Date.prototype.format = function (f) {
-
-    if (!this.valueOf()) return " ";    
-
-    var d = this;
-    return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p)/gi, function ($1) {
-        switch ($1) {
-            case "yyyy": return d.getFullYear();
-            case "yy": return String(d.getFullYear() % 1000).digits(2);
-            case "MM": return String(d.getMonth() + 1).digits(2);
-            case "dd": return String(d.getDate()).digits(2);
-            case "E0": return d.getDay().toWeekName(0);
-            case "E1": return d.getDay().toWeekName(1);
-            case "E2": return d.getDay().toWeekName(2);            
-            case "HH": return String(d.getHours()).digits(2);
-            case "hh": return String((h = d.getHours() % 12) ? h : 12).digits(2);
-            case "mm": return String(d.getMinutes()).digits(2);
-            case "ss": return String(d.getSeconds()).digits(2);
-            case "a/p": return d.getHours().toMeridiem(2);
-            default: return $1;
-        }
-    });
+	if (!this.valueOf()) return ' ';
+	var d = this;
+	return f.replace(/(yyyy|yy|mm|dd|yw|mw|E0|E1|E2|hh|mi|ss|a\/p)/gi, function ($1) {
+	    switch ($1) {
+	        case 'yyyy': return d.getFullYear();
+	        case 'yy' : return String(d.getFullYear() % 1000).digits(2);
+	        case 'mm' : return String(d.getMonth() + 1).digits(2);
+	        case 'dd' : return String(d.getDate()).digits(2);
+	        case 'yw' : return d.getWeek();
+	        case 'mw' : return d.getWeekOfMonth();
+	        case 'E0' : return d.getDay().toWeekName(0);
+	        case 'E1' : return d.getDay().toWeekName(1);
+	        case 'E2' : return d.getDay().toWeekName(2);            
+	        case 'HH' : return String(d.getHours()).digits(2);
+	        case 'hh' : return String((h = d.getHours() % 12) ? h : 12).digits(2);
+	        case 'mi' : return String(d.getMinutes()).digits(2);
+	        case 'ss' : return String(d.getSeconds()).digits(2);
+	        case 'a/p': return d.getHours().toMeridiem(2);
+	        default: return $1;
+	    }
+	});
 };
