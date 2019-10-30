@@ -221,6 +221,6 @@
 				}
 				,isBlackBerry: _BlackBerry
 	        };
-		};
-	    
+	};
+	Base.tracking= Function.prototype.bind.call(console.log, $w, '%c[DEBUG]', 'color:red;');
 }) (window, jQuery);
