@@ -1,0 +1,26 @@
+{
+    "name": "common_javascripES6",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "self testing",
+    "main": "es6.js.index.html",
+    "scripts": {
+      "lint": "eslint \"**/*.js\"",
+      "test": "jest"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/dragonslam/javascript_library"
+    },
+    "author": "dragonslam",
+    "license": "MIT",
+    "bugs": {
+      "url": "https://github.com/dragonslam?tab=repositories"
+    },
+    "homepage": "https://github.com/dragonslam",
+    "devDependencies": {
+      "eslint": "^6.8.0",
+      "eslint-plugin-jest": "^23.11.0",
+      "jest": "^26.0.1"
+    }
+  }
