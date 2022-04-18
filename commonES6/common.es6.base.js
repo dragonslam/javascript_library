@@ -1,6 +1,7 @@
 /* common.es6.base.js
  	writ by yi seung-yong(dragonslam@nate.com)
- 	date, 2022/04/14	
+ 	date, 2022/04/14
+    update, 2022/04/18
 */
 const __initializeBaseModule = function($w, root, configuration = {}) {
     if (!!!$w) return;
@@ -83,6 +84,7 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
             if (this['style']) this['style']['visibility'] = 'hidden';
             return this;
         },
+        
     };
 
     Base.Browser = function() {

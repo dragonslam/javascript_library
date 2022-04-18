@@ -1,6 +1,6 @@
 /* common.es6.base.util.js
  	writ by yi seung-yong(dragonslam@nate.com)
- 	date, 2022/04/14	
+ 	date, 2022/04/15
 */
 (function($w) {
     if (!!!$w) return;
