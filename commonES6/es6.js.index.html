@@ -10,55 +10,67 @@
 
     <title>Hello, world!</title>
 
-    <script defer="defer" src="./common.es6.js"></script>
-    <script defer="defer" src="./common.es6.base.js"></script>
+    <script>
+        const __DOMAIN_NAME = 'dragonslam';
+        const __DOMAIN_CONF = {
+            is_debug      : true,
+            js_common_path: 'http://dev.dragonslam.net/commonES6',
+            js_path			  : 'http://dev.dragonslam.net/commonES6',
+            image_path		: 'http://dev.dragonslam.net',
+            scheme			  : 'file',            
+            site_no			  : '1300001',
+            chnl_cd			  : '30',
+            disp_divi_cd	: '10',
+            client_no		  : 'C00001',
+            app_cd			  : '10',
+            app_type_cd		: '',
+            is_app			  : 'N',
+            cookie_domain	: '.dragonslam.net',
+            base_domain_url:'//dev.dragonslam.net',
+            app_ver			  : '',
+        };
+    </script>
+    <script src="./common.es6.js"></script>
+    <script src="./common.es6.base.js"></script>
+    <script src="./modules/common.es6.base.fetch.js"></script>
+    <script src="./modules/common.es6.base.util.js"></script>
   </head>
   <body>
     <h1>Hello, world!</h1>
     <div class="box mb-3 shadow-sm border rounded bg-white profile-box text-center">
       <div class="py-4 px-3 border-bottom">
-      <img id="profileImg" class="img-fluid mt-2 rounded-circle" src="" alt="Responsive image">
-      <h5 id="profileName" class="font-weight-bold text-dark mb-1 mt-4">-</h5>
-      <p id="profileLocation" class="mb-0 text-muted"></p></div>
+        <img id="profileImg" class="img-fluid mt-2 rounded-circle" src="" alt="Responsive image">
+        <h5 id="profileName" class="font-weight-bold text-dark mb-1 mt-4">-</h5>
+        <p id="profileLocation" class="mb-0 text-muted"></p>
+      </div>
       <div class="d-flex">
-      <div class="col-6 border-right p-3">
-      <h6 id="profileFollowers" class="font-weight-bold text-dark mb-1">0</h6>
-      <p class="mb-0 text-black-50 small">Followers</p>
-      </div>
-      <div class="col-6 p-3">
-      <h6 id="publicRepos" class="font-weight-bold text-dark mb-1">0</h6>
-      <p class="mb-0 text-black-50 small">Repositories</p>
-      </div>
+        <div class="col-6 border-right p-3">
+          <h6 id="profileFollowers" class="font-weight-bold text-dark mb-1">0</h6>
+          <p class="mb-0 text-black-50 small">Followers</p>
+        </div>
+        <div class="col-6 p-3">
+          <h6 id="publicRepos" class="font-weight-bold text-dark mb-1">0</h6>
+          <p class="mb-0 text-black-50 small">Repositories</p>
+        </div>
       </div>
       <div class="overflow-hidden border-top">
-      <a id="profileLink" class="font-weight-bold p-3 d-block" href=""> View my profile </a>
+        <a id="profileLink" class="font-weight-bold p-3 d-block" href=""> View my profile </a>
       </div>
-    </div>    
-    <script type="module">
-        const __BASE_NAME = 'dragonslam';
-        const __BASE_CONF = {
-            is_debug        : true,
-            js_common_path	: 'http://dev.dragonslam.net/commonES6',
-            js_path			: 'http://dev.dragonslam.net/commonES6',
-            image_path		: 'http://dev.dragonslam.net',
-            scheme			: 'file',            
-            site_no			: '1300001',
-            chnl_cd			: '30',
-            disp_divi_cd	: '10',
-            client_no		: 'C00001',
-            app_cd			: '10',
-            app_type_cd		: '',
-            is_app			: 'N',
-            cookie_domain	: '.dragonslam.net',
-            base_domain_url	: '//dev.dragonslam.net',
-            app_ver			: '',
-        };
-        const __BASE_MODULE = initializeBaseModule(window, __BASE_NAME, __BASE_CONF).then(() => {
-            const clazz = $O.Core.namespace('class0.class1.class2');
-            const module= $O.Core.module(clazz);
-        });
+    </div>
 
-        window.onload = function() {
+    <script>
+      window.addEventListener('DOMContentLoaded', function(){
+        $O.Core.loader('biz/biz.base').then(function() {
+
+          $O.Core.loader('biz/part/biz.part.base').then(function() {
+            $O.Core.get('biz.part').init('page1');
+          });
+        });        
+      });
+    </script>
+
+    <script>
+      window.onload = function(){
             const stringBuilder = $O.Util.stringBuilder('aaaa')
                                         .append('bbbb')
                                         .append('cccc')
@@ -81,11 +93,17 @@
             $O.tracking('<< QueryUtil', queryUtil);
 
 
+            const fetchJson = $O.Fetch.get('./package.json');
+            $O.tracking('<< FetchJson Promise : ', fetchJson);
+            fetchJson.then((json) => {
+              $O.tracking('<< fetchJson Result : ', json);              
+            });
+
             // fetch('https://api.github.com/users/dragonslam').then(res => res.json()).then(text => console.log(text));
-            const fetchGet = $O.Fetch.get('https://api.github.com/users/dragonslam');
-            $O.logging($O.Fetch, '>> FetchGet : '+ fetchGet);
-            fetchGet.then((json) => {
-              $O.tracking('<< FetchGet Result : ', json);
+            const fetchGithub = $O.Fetch.get('https://api.github.com/users/dragonslam');
+            $O.tracking('<< fetchGithub Promise : ', fetchGithub);
+            fetchGithub.then((json) => {
+              $O.tracking('<< fetchGithub Result : ', json);
               $O('#profileImg').Attr('src', json['avatar_url']||'');
               $O('#profileName').Text(json['name']||'');
               $O('#profileLocation').Text(json['location']||'');
@@ -97,8 +115,13 @@
               $O.logging($O, '>> profileLinkText : '+ $O('#profileLink').Text());
             });
 
+            // Error CORS(Cross-Origin Resource Sharing).
+            // const fetchPost = $O.Fetch.post('https://api.github.com/users/dragonslam');
+
         };
     </script>
+
+
 
   </body>
 </html>

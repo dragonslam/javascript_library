@@ -2,11 +2,11 @@
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/15
 */
-(function($w) {
+(function($w, root = '') {
     if (!!!$w) return;
-    if (!!!$w['$O']) return;
+    if (!!!$w[root]) return;
 
-    const Base = $w['$O'];
+    const Base = $w[root];
     const Util = {
         clone : function(obj, dest) {
             let This = this;
@@ -210,7 +210,7 @@
             };            
             return new StringBuilder(str);
         },
-        JSONtoString : function(obj, step) {
+        jsonToString : function(obj, step) {
             if (typeof step == 'number' && step > 2) return "''";
             let cnt		= 0,
                 json	= '',
@@ -285,4 +285,4 @@
     
     Object.assign(Base.Util, Util);
 
-})(window);
+}) (window, __DOMAIN_NAME);

@@ -3,9 +3,9 @@
  	date, 2022/04/14
     update, 2022/04/18
 */
-const __initializeBaseModule = function($w, root, configuration = {}) {
+(function($w, root, configuration = {}) {
     if (!!!$w) return;
-    if (!$w['console']) {
+    if (!!!$w['console']) {
         $w.logStack	= [];
 	    $w.console	= {
             log : (s) => logStack.push('[Log]'+ s),
@@ -14,24 +14,11 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
         };
     }
 
-    const _win = $w;
-    const _doc = $w.document;
-
-    class Clazz {
-        constructor(clazz, source = {}) {
-            this.className = clazz;
-            this._extends(source);
-        }
-        _extends(source = {}) {
-            Object.assign(this, source);
-        }
-    };
-    const ClassBuilder = (clazz, source) => new Clazz(clazz, source);
-
-    const _Fix = '__';
+    const $win = $w;
+    const $doc = $w.document;    
     const Root = (root||'ROOT');
     const Base = $w['$O'] = $w[Root] = ($w[Root]||function() {
-        return Base._fn.apply(Base, arguments);
+        return __dom.apply($w, arguments);
     });
 
     Base.global= Object.assign({
@@ -40,73 +27,19 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
         image_path		: '/img',
     }, configuration);
 
-    Base.user  = $w['$U'] = ($w['$U']||{uId:'', uNo:String((new Date()).getTime()), uNm:''});
+    Base.user  = $w['$U'] = ($w['$U']||{uId:'', uNo:Date.now(), uNm:''});
     Base.wtf   = Base.logging = Base.tracking = function(){};
 
-    Base._fn = function(...arg) {
-        if(!arg) return undefined;
-        let obj = _doc.querySelectorAll(arg);
-        if (obj && obj.length > 0) {
-            obj.forEach((o) => Object.assign(o, Base._fn.Helper));
-            if(obj.length == 1) obj = obj[0];
-        } else obj = undefined;
-        return obj;
-    };
-    Base._fn.Helper = {
-        Attr : function(attr = '', val) {
-            if (val != undefined) {
-                if (this[attr]) {
-                    if (typeof this[attr] == 'function') this[attr](val);
-                    else this[attr] = val;
-                }
-                return this;
-            } else {
-                return (typeof this[attr] == 'function') ? (this[attr]()||'') : (this[attr]||'');
+    Base.Browser= function() {
+        const n =$w['navigator'],
+              a = n['userAgent'].toLowerCase(),
+              s = 'MSIE,Beonex,Chimera,Chrome,Firefox,Mozilla,NetPositive,Netscape,Opera,Phoenix,Safari,SkipStone,StarOffice,WebTV';
+        let b = '';
+        s.split(',').some(function(v) {
+            if (a.indexOf(v.toLowerCase()) >= 0) {
+                b = v; return true;
             }            
-        },
-        Text : function(txt) {
-            return this.Attr('innerText', txt);
-        },
-        AppendText : function(txt = '') {
-            return this.Attr('innerText', this.innerText + txt);
-        },
-        Html : function(htm) {
-            return this.Attr('innerHTML', htm);
-        },
-        AppendHtml : function(htm = '') {
-            return this.Attr('innerHTML', this.innerHTML + htm);
-        },
-        Show : function() {
-            if (this['style']) this['style']['visibility'] = 'visible';
-            return this;
-        },
-        Hide : function() {
-            if (this['style']) this['style']['visibility'] = 'hidden';
-            return this;
-        },
-        
-    };
-
-    Base.Browser = function() {
-        const n=$w['navigator'],
-              a= n['userAgent'].toLowerCase();
-        function getBrowser() {
-            if (a.indexOf('msie') != -1)        return 'MSIE';
-            if (a.indexOf('beonex') != -1) 		return 'Beonex';
-            if (a.indexOf('chimera') != -1) 	return 'Chimera';			
-            if (a.indexOf('chrome') != -1)		return 'Chrome';
-            if (a.indexOf('firefox') != -1) 	return 'Firefox';
-            if (a.indexOf('mozilla/5.0') != -1)	return 'Mozilla';
-            if (a.indexOf('netpositive') != -1)	return 'NetPositive';
-            if (a.indexOf('netscape') != -1)	return 'Netscape';
-            if (a.indexOf('opera') != -1)		return 'Opera';
-            if (a.indexOf('phoenix') != -1) 	return 'Phoenix';
-            if (a.indexOf('safari') != -1) 		return 'Safari';
-            if (a.indexOf('skipstone') != -1)	return 'SkipStone';
-            if (a.indexOf('staroffice') != -1)	return 'StarOffice';
-            if (a.indexOf('webtv') != -1) 		return 'WebTV';
-        }
-        const b = getBrowser();
+        });
         return {            
              navigator: n
             ,agent	  : a
@@ -140,25 +73,64 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
         };
     };
 
+    class Clazz {
+        constructor(clazz, source = {}) {
+            this.className = clazz;
+            this.classPath = clazz;
+            this.extends(source);
+        }
+        extends(source = {}) {
+            Object.assign(this, source);
+        }
+        init() {
+            Base.logging(this, 'init()');
+            return this;
+        }
+        getClassPath() {
+            if (!this['classPath']) return '';
+            let parts = this.classPath.split('.'); 
+            if (parts[0]==Root) {
+                parts	= parts.slice(1);
+            }
+            return parts.join('.');
+        }
+    };
+    const _Fix= '__';
+    const ClassBuilder = (clazz, source) => new Clazz(clazz, source);    
     Base.Core = ClassBuilder('Core', {
-        namespace : function(ns) {
+        get : function(ns, module = '') {
+            if (!ns) return undefined;
             let clazz	= Base,
-                paths	= Root,			
+                parts	= ns.split('.');
+            if (parts[0]==Root) {
+                parts	= parts.slice(1);
+            }
+            if (module != '') {
+                parts.push(module);
+            }
+            for (let i = 0; i < parts.length; i++) {
+                if (typeof clazz[_Fix+parts[i]] === 'undefined') return undefined;
+                clazz=clazz[_Fix+parts[i]];
+            }
+            return clazz;
+        },
+        namespace : function(ns) {
+            if (!ns) return undefined;
+            let clazz	= Base,
+                paths	= Root,
                 parts	= ns.split('.'),
                 isNewbie= false;
             if (parts[0]==Root) {
                 parts	= parts.slice(1);
             }
             for (let i = 0; i < parts.length; i++) {
+                paths = paths +'.'+ parts[i];
                 if (typeof clazz[_Fix+parts[i]] === 'undefined') {
-                    isNewbie = true;
+                    isNewbie = true;                    
                     clazz[_Fix+parts[i]] = ClassBuilder('', {
                         className : parts[i],
-                        classPath : paths = paths+'.'+parts[i],
-                        classUUID : paths + (Base.user['uNo']?'.'+Base.user['uNo']:''),
-                        init :  function() {
-                            Base.logging(this, 'init()');
-                        }
+                        classPath : paths ,
+                        classUUID : paths + (Base.user['uNo']?'.'+Base.user['uNo']:'')                        
                     });
                 }
                 clazz=clazz[_Fix+parts[i]];
@@ -167,30 +139,27 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
             return clazz;
         },
         module : function(clazz, source) {
-            Base.logging(clazz, 'expandModule()');
+            Base.logging(clazz, 'module()');
             return ClassBuilder('', Object.assign({
                 isInit	 	: false,
                 isHelper 	: !!Base.global['is_debug'],
                 className	: (clazz['className']||Root),
                 classPath	: (clazz['classPath']||Root)+'.module',
-                classUUID	: (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : ''),
-                init        : function() {
-                    Base.logging(this, 'init()');
-                },
+                classUUID	: (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
             }, source||{}));
-        },
-        loader : async function(src = '') {
-            if (!!!src) return;
-            Base.logging(this, `moduleLoader( ${src} )`);
+        },        
+        loader : async function(src = '', id = '', isAsync = true) {
+            Base.logging(this, `loader( ${src} )`);
 
-            const js_path= Base.global['js_path']||'',
-                  js_src = String('{0}/{1}.js?v={2}').format(js_path, src, (new Date()).format('yyyymmdd'));
-			if (Base.Browser().isMsIe() || !!!$w['jQuery']) {
+            let js_path= Base.global['js_path']||'',
+                js_src = String('{0}/{1}.js?v={2}').format(js_path, src, (id ? id : (new Date()).format('yyyymmdd')) );
+            if (Base.Browser().isMsIe() || !!!$w['jQuery']) {
                 return new Promise(function(resolve, reject) {
                     let h=document.getElementsByTagName('head')[0],
                     s=document.createElement('script');
                     s.src  = js_src;
                     s.type = 'text/javascript';
+                    s.async= (isAsync ? 'async' : '');
                     s.onload = function() {
                         if (resolve) resolve.apply(Base, arguments);
                     };
@@ -199,7 +168,7 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
                     };
                     h.appendChild(s);
                 });
-			} else if ($w['jQuery']) {
+            } else if ($w['jQuery']) {
                 return new Promise(function(resolve, reject) {
                     let _tp = 'application/x-www-form-urlencoded;charset=utf-8';
                     $w['jQuery']['ajax'].call($w, {
@@ -213,18 +182,18 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
                         error : function() {
                             if (reject) reject.call(Base, new Error(`${src} Loadding Error.`));
                         },
-                        async: (!!resolve),
+                        async: isAsync,
                         cache: true
                     });
                 });
-			} else {
+            } else {
                 throw new Error('The module could not be loaded.');
             }
-        },
+        }
     });
 
     if (Base.global['is_debug']) {
-        Base.Core.loader('module/common.es6.base.helper')
+        Base.Core.loader('modules/common.es6.base.helper', 'baseHelper', false)
             .then(
                 function() {Base.tracking('CommonHepler Loadding Complate.', arguments, 'Debug enabled.!!')},
                 function() {Base.tracking('CommonHepler Loadding Error.', arguments)}
@@ -232,20 +201,49 @@ const __initializeBaseModule = function($w, root, configuration = {}) {
     }
 
     Base.Util = ClassBuilder('Util');
-    Base.Core.loader('module/common.es6.base.util')
-        .then(
-            function() {Base.tracking('CommonUtil Loadding Complate.', arguments)},
-            function() {Base.tracking('CommonUtil Loadding Error.', arguments)}
-        );
+    Base.Fetch= ClassBuilder('Fetch');
 
-    Base.Fetch = ClassBuilder('Fetch');
-    Base.Core.loader('module/common.es6.base.fetch')
-        .then(
-            function() {Base.tracking('CommonFetch Loadding Complate.', arguments)},
-            function() {Base.tracking('CommonFetch Loadding Error.', arguments)}
-        );
-};
+    const __dom = function(...arg) {
+        if(!arg) return undefined;
+        let obj = $doc.querySelectorAll(arg);
+        if (obj && obj.length > 0) {
+            obj.forEach((o) => Object.assign(o, __dom.Helper));
+            if(obj.length == 1) obj = obj[0];
+        } else obj = undefined;
+        return obj;
+    };
+    __dom.Helper = {
+        Attr : function(attr = '', val) {
+            if (val != undefined) {
+                if (this[attr]) {
+                    if (typeof this[attr] == 'function') this[attr](val);
+                    else this[attr] = val;
+                }
+                return this;
+            } else {
+                return (typeof this[attr] == 'function') ? (this[attr]()||'') : (this[attr]||'');
+            }            
+        },
+        Text : function(txt) {
+            return this.Attr('innerText', txt);
+        },
+        AppendText : function(txt = '') {
+            return this.Attr('innerText', this.innerText + txt);
+        },
+        Html : function(htm) {
+            return this.Attr('innerHTML', htm);
+        },
+        AppendHtml : function(htm = '') {
+            return this.Attr('innerHTML', this.innerHTML + htm);
+        },
+        Show : function() {
+            if (this['style']) this['style']['visibility'] = 'visible';
+            return this;
+        },
+        Hide : function() {
+            if (this['style']) this['style']['visibility'] = 'hidden';
+            return this;
+        },
+    };
 
-async function initializeBaseModule(win = {}, root = '', configuration = {}) {
-    await __initializeBaseModule(win, root, configuration);
-}
+}) (window, __DOMAIN_NAME, __DOMAIN_CONF);

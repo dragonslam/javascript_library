@@ -2,11 +2,11 @@
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/15
 */
-(function($w) {
+(function($w, root = '') {
     if (!!!$w) return;
-    if (!!!$w['$O']) return;
+    if (!!!$w[root]) return;
 
-    const Base = $w['$O'];    
+    const Base = $w[root];
     const LoggerHelper = {
         wtf     : function() {console.log(arguments)},
         tracking: function() {console.log(arguments)},
@@ -54,4 +54,4 @@
     else {
         Object.assign(Base, LoggerHelper);
     }
-})(window);
+}) (window, __DOMAIN_NAME);

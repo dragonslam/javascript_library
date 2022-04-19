@@ -2,11 +2,11 @@
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/18
 */
-(function($w) {
+(function($w, root = '') {
     if (!!!$w) return;
-    if (!!!$w['$O']) return;
+    if (!!!$w[root]) return;
 
-    const Base  = $w['$O'];
+    const Base = $w[root];
     const DEFAULT_HEADER= {}; //{'AJAX_YN' : 'Y'};
     const POST_HEADER   = Object.assign({
         'Content-Type'  : 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -50,7 +50,7 @@
         return response[(dataType.includes('json') ? 'json' : 'text')]();
     };
 
-    const _fetch = async (requestPath, requestInit) => {
+    const _fetch = async function(requestPath, requestInit) {
         const response = await $w['fetch'].call($w, requestPath, requestInit);
         if (response.status == 200) {
             const dataType = requestInit.dataType?.toLowerCase() || response.headers.get('content-type') || 'text';
@@ -67,9 +67,9 @@
             const requestInit = Object.assign({method : 'GET', headers : DEFAULT_HEADER}, options);
             return _fetch(requestPath, requestInit);
         },        
-        post: async function(url, data={}, options={}){
+        post: async function(url, data={}, options={}) {
             const requestPath = url;
-            const requestInit = _convertRequestPost(Object.assign({method : 'POST'}, options), data);
+            const requestInit = _convertRequestPost(Object.assign({method : 'POST'},options), data);
             return _fetch(requestPath, requestInit);
         },
         put : async function(url, data={}, options={}) {
@@ -101,4 +101,4 @@
     
     Object.assign(Base.Fetch, FetchHender);
 
-})(window);
+}) (window, __DOMAIN_NAME);
