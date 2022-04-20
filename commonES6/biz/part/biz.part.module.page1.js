@@ -26,4 +26,7 @@
 
     return This;
   };
+
+  /*** 개별 Page의 기능을 구현해 보아요. */
+  
 }) (window, __DOMAIN_NAME);

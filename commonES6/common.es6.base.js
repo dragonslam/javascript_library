@@ -35,11 +35,7 @@
               a = n['userAgent'].toLowerCase(),
               s = 'MSIE,Beonex,Chimera,Chrome,Firefox,Mozilla,NetPositive,Netscape,Opera,Phoenix,Safari,SkipStone,StarOffice,WebTV';
         let b = '';
-        s.split(',').some(function(v) {
-            if (a.indexOf(v.toLowerCase()) >= 0) {
-                b = v; return true;
-            }            
-        });
+        s.split(',').some((v) => {if(a.indexOf(v.toLowerCase()) >= 0){b=v; return true;}} );
         return {            
              navigator: n
             ,agent	  : a
@@ -56,7 +52,6 @@
             b= this.Browser();
         return {
              navigator	 : n
-            ,agent		 : a
             ,platform	 : p
             ,browser     : b
             ,isMobile 	 : () => (/linux armv7/i.test(p) || /ipad/i.test(p) || /iphone/i.test(p))
@@ -70,6 +65,7 @@
             ,isTouch	 : () => ('ontouchstart' in $w)
             ,isTablet	 : () => (/SHW-M/i.test(a)||$w.screen.width > 640)
             ,isWide		 : () => ($w.screen.width > $w.screen.height)
+            ,isWin		 : () => (/win32/i.test(p) || /windows/i.test(p))
         };
     };
 
@@ -96,7 +92,8 @@
         }
     };
     const _Fix= '__';
-    const ClassBuilder = (clazz, source) => new Clazz(clazz, source);    
+    const ClassBuilder = (clazz, source) => new Clazz(clazz, source);
+
     Base.Core = ClassBuilder('Core', {
         get : function(ns, module = '') {
             if (!ns) return undefined;
@@ -151,49 +148,52 @@
         loader : async function(src = '', id = '', isAsync = true) {
             Base.logging(this, `loader( ${src} )`);
 
+            const xhrLoadingScript = function(src) {
+                return new Promise(function(resolve, reject) {
+                    let xhr = new XMLHttpRequest();
+                        xhr.open('GET', src);
+                        xhr.onreadystatechange = function(event) {
+                            const { target } = event;
+                            if (XMLHttpRequest.DONE === target.readyState) {
+                                if (target.status === 0 || (target.status >= 200 && target.status < 400)) { 
+                                    eval(target.responseText);
+                                    resolve.call(Base, target);      
+                                } else { 
+                                    reject.call(Base, target);
+                                }
+                            }
+                        };
+                        xhr.send();
+                });                
+            };
+            const appendTagScript = function(src) {
+                return new Promise(function(resolve, reject) {
+                    let s = $doc.createElement('script');
+                        s.type= 'text/javascript';
+                        s.src = src;
+                        s.id  = id;
+                        s.onload = function() { resolve.apply(Base, arguments); };
+                        s.onerror= function() { reject.call(Base, new Error(`${src} Loadding Error.`)); };
+                    $doc.getElementsByTagName('head')[0].appendChild(s);
+                });
+            };
+            const loadScript = function(src) {
+                if (Base.Browser().isMsIe() || Base.global['is_debug']) {
+                    return appendTagScript(src);
+                } else {
+                    return xhrLoadingScript(src);
+                }     
+            };
+
             let js_path= Base.global['js_path']||'',
-                js_src = String('{0}/{1}.js?v={2}').format(js_path, src, (id ? id : (new Date()).format('yyyymmdd')) );
-            if (Base.Browser().isMsIe() || !!!$w['jQuery']) {
-                return new Promise(function(resolve, reject) {
-                    let h=document.getElementsByTagName('head')[0],
-                    s=document.createElement('script');
-                    s.src  = js_src;
-                    s.type = 'text/javascript';
-                    s.async= (isAsync ? 'async' : '');
-                    s.onload = function() {
-                        if (resolve) resolve.apply(Base, arguments);
-                    };
-                    s.onerror= function() {
-                        if (reject) reject.call(Base, new Error(`${src} Loadding Error.`));
-                    };
-                    h.appendChild(s);
-                });
-            } else if ($w['jQuery']) {
-                return new Promise(function(resolve, reject) {
-                    let _tp = 'application/x-www-form-urlencoded;charset=utf-8';
-                    $w['jQuery']['ajax'].call($w, {
-                        url: js_src,
-                        dataType: 'script',
-                        contentType: _tp,
-                        beforeSend : function(o){ o.overrideMimeType(_tp); },
-                        success : function() {
-                            if (resolve) resolve.apply(Base, arguments);
-                        },
-                        error : function() {
-                            if (reject) reject.call(Base, new Error(`${src} Loadding Error.`));
-                        },
-                        async: isAsync,
-                        cache: true
-                    });
-                });
-            } else {
-                throw new Error('The module could not be loaded.');
-            }
-        }
+                js_src = String('{0}/{1}.js?v={2}').format(js_path, src, (new Date()).format('yyyymmdd') );
+            
+            return loadScript(js_src);
+        },
     });
 
     if (Base.global['is_debug']) {
-        Base.Core.loader('modules/common.es6.base.helper', 'baseHelper', false)
+        Base.Core.loader('modules/common.es6.base.helper', 'CommonHepler', false)
             .then(
                 function() {Base.tracking('CommonHepler Loadding Complate.', arguments, 'Debug enabled.!!')},
                 function() {Base.tracking('CommonHepler Loadding Error.', arguments)}
@@ -205,14 +205,17 @@
 
     const __dom = function(...arg) {
         if(!arg) return undefined;
-        let obj = $doc.querySelectorAll(arg);
+        return __dom.extend($doc.querySelectorAll(arg));
+    };
+    __dom.extend = function(obj) {
+        if(!obj) return undefined;
         if (obj && obj.length > 0) {
-            obj.forEach((o) => Object.assign(o, __dom.Helper));
+            obj.forEach((o) => Object.assign(o, __dom.ElementHelper));
             if(obj.length == 1) obj = obj[0];
         } else obj = undefined;
         return obj;
     };
-    __dom.Helper = {
+    __dom.ElementHelper = {
         Attr : function(attr = '', val) {
             if (val != undefined) {
                 if (this[attr]) {
@@ -223,27 +226,87 @@
             } else {
                 return (typeof this[attr] == 'function') ? (this[attr]()||'') : (this[attr]||'');
             }            
-        },
-        Text : function(txt) {
-            return this.Attr('innerText', txt);
-        },
+        },        
         AppendText : function(txt = '') {
             return this.Attr('innerText', this.innerText + txt);
-        },
-        Html : function(htm) {
-            return this.Attr('innerHTML', htm);
         },
         AppendHtml : function(htm = '') {
             return this.Attr('innerHTML', this.innerHTML + htm);
         },
-        Show : function() {
+        BeforText : function(txt = '') {
+            return this.Attr('innerText', txt + this.innerText);
+        },
+        BeforHtml : function(htm = '') {
+            return this.Attr('innerHTML', htm + this.innerHTML);
+        },
+        Text    : function(txt = undefined) {
+            return this.Attr('innerText', txt);
+        },
+        Html    : function(htm = undefined) {
+            return this.Attr('innerHTML', htm);
+        },
+        Val     : function(val = undefined) {
+            return this.Attr('value', val);
+        }, 
+        Show    : function() {
             if (this['style']) this['style']['visibility'] = 'visible';
             return this;
         },
-        Hide : function() {
+        Hide    : function() {
             if (this['style']) this['style']['visibility'] = 'hidden';
             return this;
         },
+        Find    : function(...arg) {
+            if(!arg) return undefined;
+            return __dom.extend(this.querySelectorAll(arg));
+        },
+        /** addEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener 
+         *  event Type : https://developer.mozilla.org/ko/docs/Web/Events
+        */
+        Bind    : function(type, listener, options = {}, useCapture = false) {
+            if (!type || !listener) return this;
+            let That = this;
+            That.addEventListener(type, function(event) {
+                if (listener) listener.apply(That, event);
+            }, Object.assign({capture:useCapture, once:false, passive:true, signal:undefined}, options), useCapture);
+            return That;
+        },
+        /** removeEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/removeEventListener */
+        Unbind  : function(type, listener = undefined, options = {}, useCapture = false) {
+            if (!type) return this;
+            let That = this;
+            That.removeEventListener(type, function(event) {
+                if (listener) listener.apply(That, event);
+            }, Object.assign({capture:useCapture}, options), useCapture);
+            return That;
+        },
+        /** dispatchEvent : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/dispatchEvent */
+        Trigger : function(type) {
+            if (!type) return this;
+            if (this['dispatchEvent']) this.dispatchEvent(type);
+            return this;
+        },
     };
+    
+    if ($w['NodeList']) {
+        /** Extends NodeList prototype.. */
+        Object.keys(__dom.ElementHelper).forEach((key) => {
+            NodeList.prototype[key] = function(...args) {
+                this.forEach((e) => e[key]?.apply(e, args));
+                return this;
+            };
+        });
+        NodeList.prototype.Find = function(...arg) {
+            if(!arg) return undefined;
+            if (this.length > 0) {
+                let obj = new NodeList();
+                this.forEach((e) => {
+                    e.querySelectorAll(arg)?.forEach(obj.push);
+                });
+                return __dom.extend(obj);
+            }
+            return undefined;
+        };
+    }
 
 }) (window, __DOMAIN_NAME, __DOMAIN_CONF);

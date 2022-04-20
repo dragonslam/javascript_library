@@ -12,6 +12,21 @@
         'Content-Type'  : 'application/x-www-form-urlencoded; charset=UTF-8'
     }, DEFAULT_HEADER);
 
+    class HttpError extends Error {
+        constructor(response) {
+            let responsObj;
+            try {
+                responsObj = JSON.parse(response.resultData);
+            } catch(e) {
+                responsObj = {error_message: "요청을 처리할 수 없습니다"};
+            }
+    
+            super(`${response.status} for ${response.url}`);
+            this.name = 'HttpError';
+            Object.assign(this, responsObj);
+        }
+    };
+
     const _convertRequestQuery= (data={}) => {
         let resArr= [];
         const add = function(key, value){
@@ -82,21 +97,6 @@
             const requestInit = _convertRequestPost(Object.assign({method : 'DEL'}, options), data);
             return _fetch(requestPath, requestInit);
         },
-    };
-
-    class HttpError extends Error {
-        constructor(response) {
-            let responsObj;
-            try {
-                responsObj = JSON.parse(response.resultData);
-            } catch(e) {
-                responsObj = {error_message: "요청을 처리할 수 없습니다"};
-            }
-    
-            super(`${response.status} for ${response.url}`);
-            this.name = 'HttpError';
-            Object.assign(this, responsObj);
-        }
     };
     
     Object.assign(Base.Fetch, FetchHender);

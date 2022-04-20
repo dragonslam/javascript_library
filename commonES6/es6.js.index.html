@@ -58,19 +58,17 @@
       </div>
     </div>
 
-    <script>
+    <script src="./biz/biz.base.js"></script>
+    <script type="module">
       window.addEventListener('DOMContentLoaded', function(){
-        $O.Core.loader('biz/biz.base').then(function() {
 
           $O.Core.loader('biz/part/biz.part.base').then(function() {
             $O.Core.get('biz.part').init('page1');
-          });
-        });        
+          });      
       });
     </script>
-
     <script>
-      window.onload = function(){
+      window.onload = function() {
             const stringBuilder = $O.Util.stringBuilder('aaaa')
                                         .append('bbbb')
                                         .append('cccc')
