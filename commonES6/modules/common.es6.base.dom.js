@@ -17,9 +17,9 @@
     };
 
     const _dom = function(...arg) {
-        return _dom.extend($doc.querySelectorAll(arg));
+        return _dom.extends($doc.querySelectorAll(arg));
     };
-    _dom.extend = function(obj) {
+    _dom.extends = function(obj) {
         if(!obj) return undefined;
         if (obj && obj.length > 0) {
             obj.forEach((o) => Base.extends(o, _dom.ElementHelper));

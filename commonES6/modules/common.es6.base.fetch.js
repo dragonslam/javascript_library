@@ -8,7 +8,7 @@
 
     const Base = $w[root];
     const DEFAULT_HEADER= {}; //{'AJAX_YN' : 'Y'};
-    const POST_HEADER   = Object.assign({
+    const POST_HEADER   = Base.extends({
         'Content-Type'  : 'application/x-www-form-urlencoded; charset=UTF-8'
     }, DEFAULT_HEADER);
 
@@ -23,7 +23,7 @@
     
             super(`${response.status} for ${response.url}`);
             this.name = 'HttpError';
-            Object.assign(this, responsObj);
+            Base.extends(this, responsObj);
         }
     };
 
@@ -43,7 +43,7 @@
     };    
 
     const _convertRequestPost= (data={}, options) => {
-        const requestInit = Object.assign({
+        const requestInit = Base.extends({
             headers: POST_HEADER
            ,body   : null
         }, options);
@@ -78,27 +78,27 @@
 
     const FetchHender= {        
         get : async function(url, data={}, options={}) {
-            const requestPath = url +(url.includes('?')?'&':'?')+ _convertRequestQuery(Object.assign(data, {'_' : Date.now()}));
-            const requestInit = Object.assign({method : 'GET', headers : DEFAULT_HEADER}, options);
+            const requestPath = url +(url.includes('?')?'&':'?')+ _convertRequestQuery(Base.extends(data, {'_' : Date.now()}));
+            const requestInit = Base.extends({method : 'GET', headers : DEFAULT_HEADER}, options);
             return _fetch(requestPath, requestInit);
         },        
         post: async function(url, data={}, options={}) {
             const requestPath = url;
-            const requestInit = _convertRequestPost(Object.assign({method : 'POST'},options), data);
+            const requestInit = _convertRequestPost(Base.extends({method : 'POST'},options), data);
             return _fetch(requestPath, requestInit);
         },
         put : async function(url, data={}, options={}) {
             const requestPath = url;
-            const requestInit = _convertRequestPost(Object.assign({method : 'PUT'}, options), data);
+            const requestInit = _convertRequestPost(Base.extends({method : 'PUT'}, options), data);
             return _fetch(requestPath, requestInit);
         },
         del : async function(url, data={}, options={}) {
             const requestPath = url;
-            const requestInit = _convertRequestPost(Object.assign({method : 'DEL'}, options), data);
+            const requestInit = _convertRequestPost(Base.extends({method : 'DEL'}, options), data);
             return _fetch(requestPath, requestInit);
         },
     };
     
-    Object.assign(Base.Fetch, FetchHender);
+    Base.extends(Base.Fetch, FetchHender);
 
 }) (window, __DOMAIN_NAME||'');

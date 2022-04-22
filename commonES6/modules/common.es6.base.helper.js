@@ -49,9 +49,9 @@
     };
     
     if (Base.Browser().isChrome() || Base.Browser().isSafari()) {
-        Object.assign(Base, ChromeHelper);
+        Base.extends(Base, ChromeHelper);
     }
     else {
-        Object.assign(Base, LoggerHelper);
+        Base.extends(Base, LoggerHelper);
     }
 }) (window, __DOMAIN_NAME||'');

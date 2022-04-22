@@ -41,6 +41,6 @@
 		},
 	};   
     
-    Object.assign(Base.Pages, Pages);
+    Base.extends(Base.Pages, Pages);
 
 }) (window, __DOMAIN_NAME||'');

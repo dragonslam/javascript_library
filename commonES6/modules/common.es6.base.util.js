@@ -99,7 +99,7 @@
         cache : function(options = {}) {
             class CacheBuilder {
                 constructor(options = {}) {
-                    this._options = Object.assign({
+                    this._options = Base.extends({
                         type  : 'cache', // cache || local || session
                         span  : 0,
                         format: 's',
@@ -283,6 +283,6 @@
         }
     };
     
-    Object.assign(Base.Util, Util);
+    Base.extends(Base.Util, Util);
 
 }) (window, __DOMAIN_NAME||'');
