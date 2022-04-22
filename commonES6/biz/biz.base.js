@@ -28,7 +28,7 @@
 		Base.logging(this, 'init()');
 		const This = this;
 		
-		This.setting(options||{});
+		This.setSetting(options||{});
 		This.cache= Base.Util.cache( Object.assign({prifix:This.classPrifix, span:30, format:'m'}, Base.Util.clone(Appl.configuration.cacheOptions)) );
 		Module.init();
 
@@ -37,11 +37,11 @@
 	Appl.isInit = function() {
 		return Module['isInit'];
 	};
-    Appl.setting= function(options) {
-		Base.logging(this,'setting()');
-		Base.tracking('Module.setting()-> AS-IS', Module.options);
+    Appl.setSetting= function(options) {
+		Base.logging(this,'setSetting()');
+		Base.tracking('Module.setSetting()-> AS-IS', Module.options);
 		Module.options= Object.assign(Module.options||{}, options||{});
-		Base.tracking('Module.setting()-> TO-BE', Module.options);
+		Base.tracking('Module.setSetting()-> TO-BE', Module.options);
 		return this;
 	};
 	Appl.getSetting= function() {
@@ -63,14 +63,14 @@
 			,oNavigation	: $O('#wrap .gnb .navi .navi_box')
 		};
 		
-		This.initUI();
+		This.initEventListner();
 
 		
 		Base.logging(This, 'initialize completed.');010
 		return This;
 	};
-	Module.initUI= function() {
-		Base.logging(this, 'initUI()');		
+	Module.initEventListner= function() {
+		Base.logging(this, 'initEventListner()');
 		let This = this;
 
 		return This;
@@ -78,5 +78,23 @@
 
 
 	Appl.init();
+	Appl.Page={
+		initEventListner : function() {
+			Base.logging(this, 'initEventListner()');
+			return this;
+		},
+		initTransaction : function() {
+			Base.logging(this, 'initTransaction()');
+			return this;
+		},
+		pageBeforeShow : function() {
+			Base.logging(this, 'pageBeforeShow()');
+			return this;
+		},
+		pageShow : function() {
+			Base.logging(this, 'pageShow()');
+			return this;
+		},
+	};
 	
 }) (window, __DOMAIN_NAME);

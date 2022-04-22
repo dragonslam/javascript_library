@@ -148,7 +148,7 @@
         loader : async function(src = '', id = '', isAsync = true) {
             Base.logging(this, `loader( ${src} )`);
 
-            const xhrLoadingScript = function(src) {
+            const xhrScriptLoader = function(src) {
                 return new Promise(function(resolve, reject) {
                     let xhr = new XMLHttpRequest();
                         xhr.open('GET', src);
@@ -166,7 +166,7 @@
                         xhr.send();
                 });                
             };
-            const appendTagScript = function(src) {
+            const tagScriptLoader = function(src) {
                 return new Promise(function(resolve, reject) {
                     let s = $doc.createElement('script');
                         s.type= 'text/javascript';
@@ -179,9 +179,9 @@
             };
             const loadScript = function(src) {
                 if (Base.Browser().isMsIe() || Base.global['is_debug']) {
-                    return appendTagScript(src);
+                    return tagScriptLoader(src);
                 } else {
-                    return xhrLoadingScript(src);
+                    return xhrScriptLoader(src);
                 }     
             };
 

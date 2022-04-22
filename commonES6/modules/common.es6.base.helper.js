@@ -48,7 +48,7 @@
         },
     };
     
-    if (Base.Browser().isChrome()) {
+    if (Base.Browser().isChrome() || Base.Browser().isSafari()) {
         Object.assign(Base, ChromeHelper);
     }
     else {

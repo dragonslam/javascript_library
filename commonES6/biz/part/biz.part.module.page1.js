@@ -10,10 +10,10 @@
   const Appl  = Base.Core.namespace('biz');
   const Part  = Base.Core.namespace('biz.part');
   const Page  = Base.Core.namespace('biz.part.page1');
-  const Module= Base.Core.module(Page);
+  const Module= Base.Core.module(Page, Appl.Page);
 
   
-  Part.init	= function(module) {
+  Page.init	= function(module) {
     Base.logging(this, 'init()');
     const This = this;
     Module.init();
@@ -23,6 +23,8 @@
   Module.init = function() {
     Base.logging(this, 'init()');
     const This = this;
+
+    Base.tracking('>> Page Module :: ', this);
 
     return This;
   };
