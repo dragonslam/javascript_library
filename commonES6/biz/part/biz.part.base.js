@@ -1,4 +1,4 @@
-/* es6.biz.base.js
+/* biz.part.base.js
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/19
 */
@@ -9,7 +9,7 @@
     const Base  = $w[root];
     const Appl  = Base.Core.namespace('biz');
     const Part  = Base.Core.namespace('biz.part');
-	const Module= Base.Core.module(Part, Appl.Page);
+	const Module= Base.Core.module(Part);
   
     Part.init	= function(module) {
 		Base.logging(this, 'init()');
@@ -36,4 +36,4 @@
 
 	/*** Page Group의 공통 기능을 구현해 보아요. */
 
-}) (window, __DOMAIN_NAME);
+}) (window, __DOMAIN_NAME||'');

@@ -3,7 +3,7 @@
  	date, 2022/04/14
     update, 2022/04/18
 */
-(function($w, root, configuration = {}) {
+(function($w) {
     if (!!!$w) return;
     if (!!!$w['console']) {
         $w.logStack	= [];
@@ -13,12 +13,16 @@
             wtf : (s) => logStack.push('[Wtf]'+ s),
         };
     }
+}) (window);
 
-    const $win = $w;
-    const $doc = $w.document;    
-    const Root = (root||'ROOT');
-    const Base = $w['$O'] = $w[Root] = ($w[Root]||function() {
-        return __dom.apply($w, arguments);
+/**
+ * common configuration.
+ */
+(function($w, root, configuration = {}) {
+    if (!!!$w) return;
+
+    const Base = $w['$O'] = $w[root] = ($w[root]||function() {
+        return Base['__DomHelper'] && Base['__DomHelper'].apply($w, arguments);
     });
 
     Base.global= Object.assign({
@@ -30,6 +34,17 @@
     Base.user  = $w['$U'] = ($w['$U']||{uId:'', uNo:Date.now(), uNm:''});
     Base.wtf   = Base.logging = Base.tracking = function(){};
 
+}) (window, __DOMAIN_NAME||'', __DOMAIN_CONF||{});
+
+
+/**
+ * common fn.
+ */
+ (function($w, root) {
+    if (!!!$w) return;
+    if (!!!$w[root]) return;
+
+    const Base = $w[root];
     Base.Browser= function() {
         const n =$w['navigator'],
               a = n['userAgent'].toLowerCase(),
@@ -68,7 +83,66 @@
             ,isWin		 : () => (/win32/i.test(p) || /windows/i.test(p))
         };
     };
+    Base.extends = function(...args) {
+        return Object.assign.apply($w, args);
+    };
+    Base.toString = function(arg) {
+        return Object.prototype.toString.call(arg);
+    };
+    Base.isPlainObject = function(arg) {
+        if (this.toString(null) === '[object Object]') {
+            return arg !== null
+				&& arg !== undefined
+                && arg.ownerDocument === undefined
+				&& this.toString(arg)=== '[object Object]';
+        } else {
+            return this.toString(arg)=== '[object Object]';
+        }
+    };
+    Base.type = function(value, typeName) {
+        const isGet = arguments.length === 1;
+        const result= (name) => {return isGet ? name : typeName === name;}
 
+        if (value === null) {
+            return result('null');
+        }
+        if (value && value.nodeType) {
+            if (value.nodeType === 1 || value.nodeType === 9) {
+                return result('element');
+            } else if (value && value.nodeType === 3 && value.nodeName === '#text') {
+                return result('textnode');
+            }
+        }
+        if (this.isPlainObject(value)) {
+            return result('object');
+        }
+
+        const s = this.toString(value),
+              t = s.match(/\[object (.*?)\]/)[1].toLowerCase();
+        if (t === 'number') {
+            if (isNaN(value)) return result('nan');
+            if (!isFinite(value)) return result('infinity');
+            return result('number');
+        }
+
+        return isGet ? t : t === typeName;
+    };
+}) (window, __DOMAIN_NAME||'');
+
+
+/**
+ * common Core Class 
+ * - extend class
+ * - extend module 
+ * - script loader
+ */
+(function($w, root) {
+    if (!!!$w) return;    
+    if (!!!$w[root]) return;
+
+    const $doc = $w.document;
+    const Root = root||'';
+    const Base = $w[Root];
     class Clazz {
         constructor(clazz, source = {}) {
             this.className = clazz;
@@ -76,7 +150,7 @@
             this.extends(source);
         }
         extends(source = {}) {
-            Object.assign(this, source);
+            Base.extends(this, source);
         }
         init() {
             Base.logging(this, 'init()');
@@ -137,15 +211,16 @@
         },
         module : function(clazz, source) {
             Base.logging(clazz, 'module()');
-            return ClassBuilder('', Object.assign({
-                isInit	 	: false,
-                isHelper 	: !!Base.global['is_debug'],
-                className	: (clazz['className']||Root),
-                classPath	: (clazz['classPath']||Root)+'.module',
-                classUUID	: (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
-            }, source||{}));
-        },        
-        loader : async function(src = '', id = '', isAsync = true) {
+            return Base.extends(ClassBuilder((clazz['className']||''), source||{}), {
+                className : (clazz['className']||Root),
+                classPath : (clazz['classPath']||Root)+'.module',
+                classUUID : (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
+            });
+        },
+        page    : function(clazz) {
+            return this.module(clazz, Base.Pages);
+        }, 
+        loader  : async function(src = '', id = '', isAsync = true) {
             Base.logging(this, `loader( ${src} )`);
 
             const xhrScriptLoader = function(src) {
@@ -202,111 +277,6 @@
 
     Base.Util = ClassBuilder('Util');
     Base.Fetch= ClassBuilder('Fetch');
+    Base.Pages= ClassBuilder('Pages');
 
-    const __dom = function(...arg) {
-        if(!arg) return undefined;
-        return __dom.extend($doc.querySelectorAll(arg));
-    };
-    __dom.extend = function(obj) {
-        if(!obj) return undefined;
-        if (obj && obj.length > 0) {
-            obj.forEach((o) => Object.assign(o, __dom.ElementHelper));
-            if(obj.length == 1) obj = obj[0];
-        } else obj = undefined;
-        return obj;
-    };
-    __dom.ElementHelper = {
-        Attr : function(attr = '', val) {
-            if (val != undefined) {
-                if (this[attr]) {
-                    if (typeof this[attr] == 'function') this[attr](val);
-                    else this[attr] = val;
-                }
-                return this;
-            } else {
-                return (typeof this[attr] == 'function') ? (this[attr]()||'') : (this[attr]||'');
-            }            
-        },        
-        AppendText : function(txt = '') {
-            return this.Attr('innerText', this.innerText + txt);
-        },
-        AppendHtml : function(htm = '') {
-            return this.Attr('innerHTML', this.innerHTML + htm);
-        },
-        BeforText : function(txt = '') {
-            return this.Attr('innerText', txt + this.innerText);
-        },
-        BeforHtml : function(htm = '') {
-            return this.Attr('innerHTML', htm + this.innerHTML);
-        },
-        Text    : function(txt = undefined) {
-            return this.Attr('innerText', txt);
-        },
-        Html    : function(htm = undefined) {
-            return this.Attr('innerHTML', htm);
-        },
-        Val     : function(val = undefined) {
-            return this.Attr('value', val);
-        }, 
-        Show    : function() {
-            if (this['style']) this['style']['visibility'] = 'visible';
-            return this;
-        },
-        Hide    : function() {
-            if (this['style']) this['style']['visibility'] = 'hidden';
-            return this;
-        },
-        Find    : function(...arg) {
-            if(!arg) return undefined;
-            return __dom.extend(this.querySelectorAll(arg));
-        },
-        /** addEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener 
-         *  event Type : https://developer.mozilla.org/ko/docs/Web/Events
-        */
-        Bind    : function(type, listener, options = {}, useCapture = false) {
-            if (!type || !listener) return this;
-            let That = this;
-            That.addEventListener(type, function(event) {
-                if (listener) listener.apply(That, event);
-            }, Object.assign({capture:useCapture, once:false, passive:true, signal:undefined}, options), useCapture);
-            return That;
-        },
-        /** removeEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/removeEventListener */
-        Unbind  : function(type, listener = undefined, options = {}, useCapture = false) {
-            if (!type) return this;
-            let That = this;
-            That.removeEventListener(type, function(event) {
-                if (listener) listener.apply(That, event);
-            }, Object.assign({capture:useCapture}, options), useCapture);
-            return That;
-        },
-        /** dispatchEvent : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/dispatchEvent */
-        Trigger : function(type) {
-            if (!type) return this;
-            if (this['dispatchEvent']) this.dispatchEvent(type);
-            return this;
-        },
-    };
-    
-    if ($w['NodeList']) {
-        /** Extends NodeList prototype.. */
-        Object.keys(__dom.ElementHelper).forEach((key) => {
-            NodeList.prototype[key] = function(...args) {
-                this.forEach((e) => e[key]?.apply(e, args));
-                return this;
-            };
-        });
-        NodeList.prototype.Find = function(...arg) {
-            if(!arg) return undefined;
-            if (this.length > 0) {
-                let obj = new NodeList();
-                this.forEach((e) => {
-                    e.querySelectorAll(arg)?.forEach(obj.push);
-                });
-                return __dom.extend(obj);
-            }
-            return undefined;
-        };
-    }
-
-}) (window, __DOMAIN_NAME, __DOMAIN_CONF);
+}) (window, __DOMAIN_NAME||'');

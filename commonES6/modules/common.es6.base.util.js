@@ -285,4 +285,4 @@
     
     Object.assign(Base.Util, Util);
 
-}) (window, __DOMAIN_NAME);
+}) (window, __DOMAIN_NAME||'');

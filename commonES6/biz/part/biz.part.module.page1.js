@@ -1,4 +1,4 @@
-/* es6.biz.base.js
+/* biz.part.module.page1.js
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/19
 */
@@ -10,7 +10,7 @@
   const Appl  = Base.Core.namespace('biz');
   const Part  = Base.Core.namespace('biz.part');
   const Page  = Base.Core.namespace('biz.part.page1');
-  const Module= Base.Core.module(Page, Appl.Page);
+  const Module= Base.Core.page(Page);
 
   
   Page.init	= function(module) {
@@ -20,15 +20,11 @@
     return This;
   };
 
-  Module.init = function() {
-    Base.logging(this, 'init()');
-    const This = this;
-
-    Base.tracking('>> Page Module :: ', this);
-
-    return This;
-  };
-
-  /*** 개별 Page의 기능을 구현해 보아요. */
+  Base.extends(Module, {
   
-}) (window, __DOMAIN_NAME);
+    /*** 개별 Page의 기능을 구현해 보아요. */
+    
+  });
+  
+  
+}) (window, __DOMAIN_NAME||'');

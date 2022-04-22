@@ -101,4 +101,4 @@
     
     Object.assign(Base.Fetch, FetchHender);
 
-}) (window, __DOMAIN_NAME);
+}) (window, __DOMAIN_NAME||'');

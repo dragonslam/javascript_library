@@ -1,4 +1,4 @@
-/* es6.biz.base.js
+/* biz.base.js
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/19
 */
@@ -78,23 +78,5 @@
 
 
 	Appl.init();
-	Appl.Page={
-		initEventListner : function() {
-			Base.logging(this, 'initEventListner()');
-			return this;
-		},
-		initTransaction : function() {
-			Base.logging(this, 'initTransaction()');
-			return this;
-		},
-		pageBeforeShow : function() {
-			Base.logging(this, 'pageBeforeShow()');
-			return this;
-		},
-		pageShow : function() {
-			Base.logging(this, 'pageShow()');
-			return this;
-		},
-	};
 	
-}) (window, __DOMAIN_NAME);
+}) (window, __DOMAIN_NAME||'');

@@ -32,12 +32,14 @@
     </script>
     <script src="./common.es6.js"></script>
     <script src="./common.es6.base.js"></script>
-    <script src="./modules/common.es6.base.fetch.js"></script>
+    <script src="./modules/common.es6.base.dom.js"></script>
     <script src="./modules/common.es6.base.util.js"></script>
+    <script src="./modules/common.es6.base.fetch.js"></script>    
+    <script src="./modules/common.es6.base.pages.js"></script>
   </head>
   <body>
     <h1>Hello, world!</h1>
-    <div class="box mb-3 shadow-sm border rounded bg-white profile-box text-center">
+    <div id="profileBox" class="box mb-3 shadow-sm border rounded bg-white profile-box text-center">
       <div class="py-4 px-3 border-bottom">
         <img id="profileImg" class="img-fluid mt-2 rounded-circle" src="" alt="Responsive image">
         <h5 id="profileName" class="font-weight-bold text-dark mb-1 mt-4">-</h5>
@@ -64,6 +66,7 @@
 
           $O.Core.loader('biz/part/biz.part.base').then(function() {
             $O.Core.get('biz.part').init('page1');
+            $O.Core.get('biz.part').init('profile');
           });      
       });
     </script>
@@ -97,25 +100,12 @@
               $O.tracking('<< fetchJson Result : ', json);              
             });
 
+            /*
             // fetch('https://api.github.com/users/dragonslam').then(res => res.json()).then(text => console.log(text));
-            const fetchGithub = $O.Fetch.get('https://api.github.com/users/dragonslam');
-            $O.tracking('<< fetchGithub Promise : ', fetchGithub);
-            fetchGithub.then((json) => {
-              $O.tracking('<< fetchGithub Result : ', json);
-              $O('#profileImg').Attr('src', json['avatar_url']||'');
-              $O('#profileName').Text(json['name']||'');
-              $O('#profileLocation').Text(json['location']||'');
-              $O('#profileFollowers').Text(json['followers']||'');
-              $O('#publicRepos').Text(json['public_repos']||'');
-              $O('#profileLink').Attr('href', json['blog']||'');
-
-              $O.logging($O, '>> profileNameText : '+ $O('#profileName').Text());
-              $O.logging($O, '>> profileLinkText : '+ $O('#profileLink').Text());
-            });
 
             // Error CORS(Cross-Origin Resource Sharing).
             // const fetchPost = $O.Fetch.post('https://api.github.com/users/dragonslam');
-
+            */
         };
     </script>
 

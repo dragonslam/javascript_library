@@ -54,4 +54,4 @@
     else {
         Object.assign(Base, LoggerHelper);
     }
-}) (window, __DOMAIN_NAME);
+}) (window, __DOMAIN_NAME||'');
