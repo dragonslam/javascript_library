@@ -219,7 +219,7 @@
                 if (typeof obj[prop] != 'function') {
                     if (cnt > 0) json += ',';
                     if (typeof obj[prop] == 'object') {
-                        json+= "'"+ prop +"':"+ this.JSONtoString(obj[prop], depth++) +"";
+                        json+= "'"+ prop +"':"+ this.jsonToString(obj[prop], depth++) +"";
                     }
                     else {
                         json+= "'"+ prop +"':'"+ String(obj[prop]).encode() +"'";
@@ -229,7 +229,7 @@
             }
             return `{${json}}`;
         },
-        querystringSerialize : function(obj) {
+        serializeQuerystring : function(obj) {
             if (!!!obj) return obj;
             let query = [];
             for(let prop in obj) {
