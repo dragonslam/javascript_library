@@ -19,7 +19,6 @@
 		_data	: {},
 		_elem	: {},
 		isInit	: false,
-		isTran	: false,
 		isHelper: !!Base.global['is_debug'],
 		init 	: function() {
 			Base.logging(this, 'init()');
@@ -27,8 +26,8 @@
 			This._cache	= Util.cache( {prifix:This.classPrifix, span:10, format:'m'} );
 			This.initEventListner()
 				.initTransaction('tranContext', {
-					LIST_TRAN : {method:'GET', endpoint:'search_1' ,render:'pageShowListRender' ,isAsync:true },
-					VIEW_TRAN : {method:'GET', endpoint:'search_2' ,render:'pageShowViewRender' ,isAsync:true }
+					LIST_TRAN : {method:'GET', endpoint:'search' ,render:'pageShowListRender' ,isAsync:true },
+					VIEW_TRAN : {method:'GET', endpoint:'view/{seq}' ,render:'pageShowViewRender' ,isAsync:true }
 				})
 				.pageBeforeShow()
 				.pageShow();
@@ -53,54 +52,81 @@
 			let This = this,
 				_Env = this._env,
 				_Tran= this._env.trans[tranId];			
-			if (_Tran) {
+			if(!_Tran) {
+				alert(`This is an undefined transaction.\n\n\r- {${tranId}}`);
+				return false;
+			}
+						
+			const cacheName = tranId +'#'+ Util.serializeQuerystring(params);
+			if (_Env.isUseCache && This._cache.isStatus(cacheName)) {
+				Base.logging(this, `_runTransaction(${tranId})->UseCache`);
+				_Tran.isRunning = false;
+				This._data[tranId] = JSON.parse(This._cache.get(cacheName));
+				This._transSuccess(tranId);
+				This._endTransaction();
+			}
+			else {
+				Base.logging(this, `_runTransaction(${tranId})->UseFetch`);				
+				let endpoint= _Tran.endpoint;
+				if (endpoint.includes('{') > 0) {					
+					Object.keys(params).forEach((key) => {
+						endpoint = endpoint.replaceAll(`{${key}}`, (params[key]||''));
+					});
+				} 
+				let apiUrl = (endpoint.isUrl()) ? endpoint : ('/'+ _Env.tranContext +'/'+ endpoint);
+				
+				This._data[tranId] = '';
 				_Env.isRunningTran = true;
-
-				let cacheName = tranId +'#'+ Util.serializeQuerystring(params);
-				if (_Env.isUseCache && This._cache.isStatus(cacheName)) {
-					Base.logging(this, `_runTransaction(${tranId})->UseCache`);
-					This._data[tranId] = JSON.parse(This._cache.get(cacheName));
-					This._transSuccess(tranId);
-				}
-				else {
-					Base.logging(this, `_runTransaction(${tranId})->UseFetch`);					
-					Fetch[_Tran.method.toLowerCase()].call(This
-						, '/'+ _Env.tranContext +'/'+ _Tran.endpoint
-						, params						
-					).then(function(data) {
+				_Tran.isRunning = true;
+				Fetch[_Tran.method.toLowerCase()].call(This, apiUrl, params)
+					.then(
+						function(data) {
 							if (_Env.isUseCache && !!!Base.global['is_debug']) {
 								This._cache.set(cacheName, Util.jsonToString(data));
 							}
 							This._data[tranId] = data;
 							This._transSuccess(tranId);
+							_Tran.isRunning = false;
+							This._endTransaction();
 						},
-						function(msg) {
-							This._tranError(msg);
+						function(error) {
+							This._tranError(error);
+							_Tran.isRunning = false;
+							This._endTransaction();
 						}
 					);
-				}
-			}
+			}			
 		},
 		_transSuccess : function(tranId) {
-			Base.logging(this, '_transSuccess()');
+			Base.logging(this, `_transSuccess(${tranId})`);
 			let This = this,
-				_Env = this._env,
-				_Tran= this._env.trans[tranId],
-				_Data= this._data[tranId];
-			if (_Tran) {
-				let renders = (_Tran.render||'').split(',');
+				_Tran= This._env.trans[tranId],
+				_Data= This._data[tranId];
+
+			let renders=(_Tran.render||'').split(',');
 				renders.forEach(render => {
 					Base.tracking(`>> ${render}() => `, _Data);
-					This[render].call(This, _Data);
+					This[render] && This[render].call(This, _Data);
 				});
-				_Env.isRunningTran = false;
-			}
-			return This;
 		},
-		_tranError : function(httpError) {
-			Base.logging(this, `tranError(${httpError})`);
-			Base.tracking('>> HttpError => ', httpError);
-			return this;
+		_tranError : function(error) {
+			Base.logging(this, `_tranError(${error})`);
+			Base.tracking('>> HttpError => ', error);
+		},
+		_tranCheck : function() {
+			let isRun = false;
+			if (this._env.trans) {				
+				Object.keys(this._env.trans).forEach((tran) => {
+					if(!isRun) isRun = this._env.trans[tran].isRunning;					
+				});
+			}
+			this._env.isRunningTran = isRun;
+			return isRun;
+		},
+		_endTransaction : function() {
+			if(!this._tranCheck()) {
+				Base.logging(this, `_endTransaction() => Transaction All Complete.`);
+			}
 		},
 		pageBeforeShow : function() {
 			Base.logging(this, 'pageBeforeShow()');
@@ -110,7 +136,7 @@
 			Base.logging(this, 'pageShow()');
 			return this;
 		},
-	};   
+	};
     
     Base.extends(Base.Pages, Pages);
 

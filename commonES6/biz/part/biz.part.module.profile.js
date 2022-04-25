@@ -40,7 +40,10 @@
     
     This.initEventListner()
         .initTransaction('commonES6', {
-          TRAN_TEST : {method:'GET', endpoint:'package.json' ,render:'packageRender' }
+          TRAN_TEST  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
+          TRAN_TEST2 : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
+          TRAN_TEST3 : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
+          GIT_PROFILE: {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
         })
         .startTransaction();
     return This;
@@ -50,7 +53,7 @@
 
     const This = this;
     This._elem.profileImg.Bind('click', function() {
-      if (This.isTran && This._data['profile']['blog']) {
+      if (This._data['GIT_PROFILE'] && This._data['GIT_PROFILE']['blog']) {
         $w.open(This._data['profile']['blog']);
       }
     });
@@ -61,18 +64,21 @@
     Base.logging(this, 'startTransaction()');
     const This = this;
 
-    This._data['profile'] = {};
-    Base.Fetch.get('https://api.github.com/users/dragonslam')
-        .then(function(json) {
-          This._data['profile'] = json;
-          This.pageShow(json);            
-        });
-
     This._runTransaction('TRAN_TEST', {'_d' : Date.now()});
+    This._runTransaction('TRAN_TEST2', {'_d' : Date.now()});
+    This._runTransaction('TRAN_TEST3', {'_d' : Date.now()});
+    This._runTransaction('GIT_PROFILE', {'_d' : Date.now()});
     return This;
   };
-  Module.pageShow = function(data) {
-    Base.logging(this, 'pageShow()');
+  Module.packageRender = function(data) {
+    Base.logging(this, 'packageRender()');
+    this._elem.packageRst.Text(Base.Util.jsonToString(data));
+  };
+  Module.packageRender2 = function(data) {
+    Base.logging(this, 'packageRender2()');
+  };
+  Module.profileShow = function(data) {
+    Base.logging(this, 'profileShow()');
     const This = this;
     const _elem= This._elem;
     
@@ -88,12 +94,5 @@
 
     return This;
   };
-  Module.packageRender = function(data) {
-    Base.logging(this, 'packageRender()');
-    const This = this;
-    const _elem= This._elem;
 
-    _elem.packageRst.Text(Base.Util.jsonToString(data));
-  };
-  
 }) (window, __DOMAIN_NAME||'');
