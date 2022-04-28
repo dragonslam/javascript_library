@@ -80,22 +80,22 @@
         get : async function(url, data={}, options={}) {
             const requestPath = url +(url.includes('?')?'&':'?')+ _convertRequestQuery(Base.extends(data, {'_' : Date.now()}));
             const requestInit = Base.extends({method : 'GET', headers : DEFAULT_HEADER}, options);
-            return _fetch(requestPath, requestInit);
+            return _fetch.call(this, requestPath, requestInit);
         },        
         post: async function(url, data={}, options={}) {
             const requestPath = url;
             const requestInit = _convertRequestPost(Base.extends({method : 'POST'},options), data);
-            return _fetch(requestPath, requestInit);
+            return _fetch.call(this, requestPath, requestInit);
         },
         put : async function(url, data={}, options={}) {
             const requestPath = url;
             const requestInit = _convertRequestPost(Base.extends({method : 'PUT'}, options), data);
-            return _fetch(requestPath, requestInit);
+            return _fetch.call(this, requestPath, requestInit);
         },
         del : async function(url, data={}, options={}) {
             const requestPath = url;
             const requestInit = _convertRequestPost(Base.extends({method : 'DEL'}, options), data);
-            return _fetch(requestPath, requestInit);
+            return _fetch.call(this, requestPath, requestInit);
         },
     };
     

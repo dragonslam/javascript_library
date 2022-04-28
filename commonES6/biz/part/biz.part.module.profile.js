@@ -64,10 +64,10 @@
     Base.logging(this, 'startTransaction()');
     const This = this;
 
-    This._runTransaction('TRAN_TEST', {'_d' : Date.now()});
-    This._runTransaction('TRAN_TEST2', {'_d' : Date.now()});
-    This._runTransaction('TRAN_TEST3', {'_d' : Date.now()});
-    This._runTransaction('GIT_PROFILE', {'_d' : Date.now()});
+    This._runTran('TRAN_TEST', {'_d' : Date.now()})
+        ._runTran('TRAN_TEST2')
+        ._runTran('TRAN_TEST3')
+        ._runTran('GIT_PROFILE');
     return This;
   };
   Module.packageRender = function(data) {

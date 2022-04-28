@@ -24,6 +24,8 @@
 			Base.logging(this, 'init()');
 			let This = this;
 			This._cache	= Util.cache( {prifix:This.classPrifix, span:10, format:'m'} );
+			/** 
+			 * TO-DO :: Initialize each page module.
 			This.initEventListner()
 				.initTransaction('tranContext', {
 					LIST_TRAN : {method:'GET', endpoint:'search' ,render:'pageShowListRender' ,isAsync:true },
@@ -31,6 +33,7 @@
 				})
 				.pageBeforeShow()
 				.pageShow();
+			*/
 			return This;
 		},
         initEventListner : function() {
@@ -48,7 +51,7 @@
 			Base.logging(this, 'startTransaction()');
 			return this;
 		},
-		_runTransaction : function(tranId, params = {}) {
+		_runTran : function(tranId, params = {}) {
 			let This = this,
 				_Env = this._env,
 				_Tran= this._env.trans[tranId];			
@@ -95,15 +98,17 @@
 							This._endTransaction();
 						}
 					);
-			}			
+			}
+			return This;
 		},
 		_transSuccess : function(tranId) {
 			Base.logging(this, `_transSuccess(${tranId})`);
+			Base.tracking(`>> _transSuccess(${tranId})`, this);
 			let This = this,
 				_Tran= This._env.trans[tranId],
 				_Data= This._data[tranId];
-
-			let renders=(_Tran.render||'').split(',');
+				
+			let renders=_Tran['render'].split(',');
 				renders.forEach(render => {
 					Base.tracking(`>> ${render}() => `, _Data);
 					This[render] && This[render].call(This, _Data);
