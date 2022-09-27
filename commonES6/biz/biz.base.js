@@ -66,7 +66,7 @@
 		This.initEventListner();
 
 		
-		Base.logging(This, 'initialize completed.');010
+		Base.logging(This, 'initialize completed.');
 		return This;
 	};
 	Module.initEventListner= function() {
