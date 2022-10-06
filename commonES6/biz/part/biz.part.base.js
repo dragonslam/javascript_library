@@ -16,12 +16,12 @@
 		const This = this;
 		const path = String('biz/part/{0}.module.{1}').format(This.getClassPath(), module);
         
-		Base.Core.loader(path).then(function(...args) {
-            Base.Core.get(This.classPath, module).init();
-		});
-
 		Module.init();
 
+		Base.Dynamic.import(path).then(() => {
+            Base.Core.find(This.classPath, module).init();
+		});
+		
 		return This;
 	};
 

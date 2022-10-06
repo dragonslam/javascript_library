@@ -36,14 +36,14 @@
       profileLink : $O('#profileLink'),
       packageRst  : $O('#packageResult'),
     };
-    This._cache	= Base.Util.cache( {prifix:This.classPrifix, span:10, format:'m'} );
+    This._cache	= Base.Utils.cache( {prifix:This.classPrifix, span:10, format:'m'} );
     
     This.initEventListner()
         .initTransaction('commonES6', {
-          TRAN_TEST  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
-          TRAN_TEST2 : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
-          TRAN_TEST3 : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
-          GIT_PROFILE: {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
+          'TRAN_TEST'  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
+          'TRAN_TEST2' : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
+          'TRAN_TEST3' : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
+          'GIT_PROFILE': {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
         })
         .startTransaction();
     return This;
@@ -72,7 +72,7 @@
   };
   Module.packageRender = function(data) {
     Base.logging(this, 'packageRender()');
-    this._elem.packageRst.Text(Base.Util.jsonToString(data));
+    this._elem.packageRst.Text(Base.Utils.jsonToString(data));
   };
   Module.packageRender2 = function(data) {
     Base.logging(this, 'packageRender2()');
@@ -80,17 +80,17 @@
   Module.profileShow = function(data) {
     Base.logging(this, 'profileShow()');
     const This = this;
-    const _elem= This._elem;
+    const elem = This._elem;
     
-    _elem.profileName.Text(data['name']||'');
-    _elem.profileLoc.Text(data['location']||'');
-    _elem.profileFlow.Text(data['followers']||'');
-    _elem.profileRepo.Text(data['public_repos']||'');  
-    _elem.profileImg.Attr('src', data['avatar_url']||'');
-    _elem.profileLink.Attr('href', data['blog']||'');
+    elem.profileName.Text(data['name']||'');
+    elem.profileLoc.Text(data['location']||'');
+    elem.profileFlow.Text(data['followers']||'');
+    elem.profileRepo.Text(data['public_repos']||'');  
+    elem.profileImg.Attr('src', data['avatar_url']||'');
+    elem.profileLink.Attr('href', data['blog']||'');
     
-    Base.logging($O, '>> profileNameText : '+ _elem.profileName.Text());
-    Base.logging($O, '>> profileLinkText : '+ _elem.profileLink.Text());
+    Base.logging($O, '>> profileNameText : '+ elem.profileName.Text());
+    Base.logging($O, '>> profileLinkText : '+ elem.profileLink.Text());
 
     return This;
   };

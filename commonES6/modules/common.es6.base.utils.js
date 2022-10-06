@@ -7,7 +7,7 @@
     if (!!!$w[root]) return;
 
     const Base = $w[root];
-    const Util = {
+    const Utils= {
         clone : function(obj, dest) {
             let This = this;
             if (null == obj || 'object' != typeof obj) return obj;
@@ -282,7 +282,7 @@
             return new QuerystringHelper($w);
         }
     };
-    
-    Base.extends(Base.Util, Util);
+
+    Base.extends(Base.Utils, Utils);
 
 }) (window, __DOMAIN_NAME||'');

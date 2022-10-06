@@ -7,7 +7,7 @@
     if (!!!$w[root]) return;
 
     const Base = $w[root];
-	const Util = Base.Util;
+	const Utils= Base.Utils;
 	const Fetch= Base.Fetch;
     const Pages= {
 		_env	: {
@@ -23,7 +23,7 @@
 		init 	: function() {
 			Base.logging(this, 'init()');
 			let This = this;
-			This._cache	= Util.cache( {prifix:This.classPrifix, span:10, format:'m'} );
+			This._cache	= Utils.cache( {prifix:This.classPrifix, span:10, format:'m'} );
 			/** 
 			 * TO-DO :: Initialize each page module.
 			This.initEventListner()
@@ -60,7 +60,7 @@
 				return false;
 			}
 						
-			const cacheName = tranId +'#'+ Util.serializeQuerystring(params);
+			const cacheName = tranId +'#'+ Utils.serializeQuerystring(params);
 			if (_Env.isUseCache && This._cache.isStatus(cacheName)) {
 				Base.logging(this, `_runTransaction(${tranId})->UseCache`);
 				_Tran.isRunning = false;

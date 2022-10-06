@@ -29,7 +29,7 @@
 		const This = this;
 		
 		This.setSetting(options||{});
-		This.cache= Base.Util.cache( Object.assign({prifix:This.classPrifix, span:30, format:'m'}, Base.Util.clone(Appl.configuration.cacheOptions)) );
+		This.cache= Base.Utils.cache( Object.assign({prifix:This.classPrifix, span:30, format:'m'}, Appl.configuration.cacheOptions) );
 		Module.init();
 
 		return This;
@@ -57,7 +57,7 @@
     Module.init= function() {
 		Base.logging(this, 'init()');		
 		let This = this;
-		This.cache= Base.Util.cache( Object.assign({prifix:This.classPrifix, span:30, format:'m'}, Base.Util.clone(Appl.configuration.cacheOptions)) );
+		This.cache= Base.Utils.cache( Object.assign({prifix:This.classPrifix, span:30, format:'m'}, Appl.configuration.cacheOptions) );
 		This.cont = {
 			 oContainer 	: $O('#wrap')
 			,oNavigation	: $O('#wrap .gnb .navi .navi_box')

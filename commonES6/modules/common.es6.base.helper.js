@@ -43,12 +43,12 @@
                 this.tracking(msg +'Object', data);	
             }
             else {
-                console.log('%c['+ oLvl['lvl'] +']', 'color:'+oLvl['col']+';', (msg+(data||'')) );
+                console.log(`%c[${oLvl['lvl']}]`, `color:${oLvl['col']};`, (msg+(data||'')) );
             }        
         },
     };
     
-    if (Base.Browser().isChrome() || Base.Browser().isSafari()) {
+    if (Base.getBrowser().isChrome() || Base.getBrowser().isSafari()) {
         Base.extends(Base, ChromeHelper);
     }
     else {

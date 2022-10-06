@@ -17,7 +17,7 @@
             js_common_path: 'http://dev.dragonslam.net/commonES6',
             js_path			  : 'http://dev.dragonslam.net/commonES6',
             image_path		: 'http://dev.dragonslam.net',
-            scheme			  : 'file',            
+            scheme			  : 'http',
             site_no			  : '1300001',
             chnl_cd			  : '30',
             disp_divi_cd	: '10',
@@ -32,10 +32,6 @@
     </script>
     <script src="./common.es6.js"></script>
     <script src="./common.es6.base.js"></script>
-    <script src="./modules/common.es6.base.dom.js"></script>
-    <script src="./modules/common.es6.base.util.js"></script>
-    <script src="./modules/common.es6.base.fetch.js"></script>    
-    <script src="./modules/common.es6.base.pages.js"></script>
   </head>
   <body>
     <h1>Hello, world!</h1>
@@ -63,46 +59,60 @@
       -
     </div>
 
-    <script src="./biz/biz.base.js"></script>
     <script type="module">
+      console.warn(`module - inline - document.readyState - ${document.readyState}`);
+      /*
+      $O.Dynamic.invoke('biz/biz.base');
+      $O.Dynamic.invoke('biz/part/biz.part.base').then(() => {
+          //$O.Core.find('biz.part').init('page1');
+          $O.Core.find('biz.part').init('profile');
+        });
+        */
       window.addEventListener('DOMContentLoaded', function(){
-
-          $O.Core.loader('biz/part/biz.part.base').then(function() {
-            $O.Core.get('biz.part').init('page1');
-            $O.Core.get('biz.part').init('profile');
-          });      
+        console.warn(`module - DOMContentLoaded - document.readyState - ${document.readyState}`);
+        $O.Dynamic.import('biz/biz.base');
+        $O.Dynamic.import('biz/part/biz.part.base').then(() => {
+            //$O.Core.find('biz.part').init('page1');
+            $O.Core.find('biz.part').init('profile');
+          });
       });
     </script>
     <script>
+      console.warn(`window - inline - document.readyState - ${document.readyState}`);
+      window.addEventListener('DOMContentLoaded', function(){
+        console.warn(`window - DOMContentLoaded - document.readyState - ${document.readyState}`);
+      });
       window.onload = function() {
-            const stringBuilder = $O.Util.stringBuilder('aaaa')
-                                        .append('bbbb')
-                                        .append('cccc')
-                                        .append('dddd');
-            $O.logging(stringBuilder, '>> StringBuilder : '+ stringBuilder.toString('__'));
+        console.warn(`window - onload - document.readyState - ${document.readyState}`);
+          const stringBuilder = $O.Utils.stringBuilder('aaaa')
+                                      .append('bbbb')
+                                      .append('cccc')
+                                      .append('dddd');
+          $O.logging(stringBuilder, '>> StringBuilder : '+ stringBuilder.toString('__'));
 
-            const cookieUtil = $O.Util.cookie(1);
-            cookieUtil.set('coName', 'coValue');
-            $O.logging(cookieUtil, '>> CookieUtil : '+ cookieUtil.get('coName'));
-            $O.tracking('<< CookieUtil', cookieUtil);
+          const cookieUtil = $O.Utils.cookie(1);
+          cookieUtil.set('coName', 'coValue');
+          $O.logging(cookieUtil, '>> CookieUtil : '+ cookieUtil.get('coName'));
+          $O.tracking('<< CookieUtil', cookieUtil);
 
-            const cacheUtil = $O.Util.cache({type:'session', span:5, format:'w'});
-            cacheUtil.set('cacheName', 'cacheValue');
-            $O.logging(cacheUtil, '>> CacheUtil : '+ cacheUtil.get('cacheName'));
-            $O.tracking('<< CacheUtil', cacheUtil);
+          const cacheUtil = $O.Utils.cache({type:'session', span:5, format:'w'});
+          cacheUtil.set('cacheName', 'cacheValue');
+          $O.logging(cacheUtil, '>> CacheUtil : '+ cacheUtil.get('cacheName'));
+          $O.tracking('<< CacheUtil', cacheUtil);
 
-            const queryUtil = $O.Util.querystringHelper();
-            queryUtil.set('qName', 'qValue');
-            $O.logging(queryUtil, '>> QueryUtil : '+ queryUtil.getUrl());
-            $O.tracking('<< QueryUtil', queryUtil);
+          const queryUtil = $O.Utils.querystringHelper();
+          queryUtil.set('qName', 'qValue');
+          $O.logging(queryUtil, '>> QueryUtil : '+ queryUtil.getUrl());
+          $O.tracking('<< QueryUtil', queryUtil);
 
 
-            const fetchJson = $O.Fetch.get('./package.json');
-            $O.tracking('<< FetchJson Promise : ', fetchJson);
-            fetchJson.then((json) => {
-              $O.tracking('<< fetchJson Result : ', json);              
-            });
-        };
+          const fetchJson = $O.Fetch.get('./package.json');
+          $O.tracking('<< FetchJson Promise : ', fetchJson);
+          fetchJson.then((json) => {
+            $O.tracking('<< fetchJson Result : ', json);              
+          });
+      };
+        
     </script>
 
 
