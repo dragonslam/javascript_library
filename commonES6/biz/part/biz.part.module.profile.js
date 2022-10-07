@@ -10,16 +10,12 @@
   const Appl  = Base.Core.namespace('biz');
   const Part  = Base.Core.namespace('biz.part');
   const Page  = Base.Core.namespace('biz.part.profile');
-  const Module= Base.Core.page(Page);
-
+  const Module= Base.Core.pageModule(Page);
   
-  Page.init	= function(module) {
-    Base.logging(this, 'init()');
+  // Page initializer set.
+  Page?.init(() => Module?.init());
 
-    Module.init();
-    return this;
-  };
-
+  // Page module initializ.
   Module.init = function() {
     Base.logging(this, 'init()');
     Base.tracking('>> Page Module :: ', this);
@@ -38,36 +34,30 @@
     };
     This._cache	= Base.Utils.cache( {prifix:This.classPrifix, span:10, format:'m'} );
     
-    This.initEventListner()
-        .initTransaction('commonES6', {
-          'TRAN_TEST'  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
-          'TRAN_TEST2' : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
-          'TRAN_TEST3' : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
-          'GIT_PROFILE': {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
-        })
-        .startTransaction();
-    return This;
-  };
-  Module.initEventListner = function() {
-    Base.logging(this, 'initEventListner()');
-
-    const This = this;
-    This._elem.profileImg.Bind('click', function() {
-      if (This._data['GIT_PROFILE'] && This._data['GIT_PROFILE']['blog']) {
-        $w.open(This._data['profile']['blog']);
-      }
-    });
-    This.isInit = true;
-    return This;
-  };
-  Module.startTransaction = function() {
-    Base.logging(this, 'startTransaction()');
-    const This = this;
-
-    This._runTran('TRAN_TEST', {'_d' : Date.now()})
-        ._runTran('TRAN_TEST2')
-        ._runTran('TRAN_TEST3')
-        ._runTran('GIT_PROFILE');
+    This.initEventListner(() => {
+        This._elem.profileImg.Bind('click', function() {
+          const profile = This._data['GIT_PROFILE']||{};
+          if (profile['blog']) {
+            $w.open(profile['blog']);
+          }
+        });
+      })
+      .initTransaction('commonES6', {
+        'TRAN_TEST'  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
+        'TRAN_TEST2' : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
+        'TRAN_TEST3' : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
+        'GIT_PROFILE': {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
+      })
+      .startTransaction({
+        /* tranId : {tranParams} */
+        'TRAN_TEST'  : {'_d' : Date.now()},
+        'TRAN_TEST2' : {},
+        'TRAN_TEST3' : {},
+        'GIT_PROFILE': {}
+      });
+    
+    /* Transaction start */
+    This._runTran('TRAN_TEST', {});
     return This;
   };
   Module.packageRender = function(data) {
@@ -89,8 +79,8 @@
     elem.profileImg.Attr('src', data['avatar_url']||'');
     elem.profileLink.Attr('href', data['blog']||'');
     
-    Base.logging($O, '>> profileNameText : '+ elem.profileName.Text());
-    Base.logging($O, '>> profileLinkText : '+ elem.profileLink.Text());
+    Base.logging(This, 'profileNameText : '+ elem.profileName.Text());
+    Base.logging(This, 'profileLinkText : '+ elem.profileLink.Text());
 
     return This;
   };

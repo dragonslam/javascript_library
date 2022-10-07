@@ -61,20 +61,19 @@
 
     <script type="module">
       console.warn(`module - inline - document.readyState - ${document.readyState}`);
-      /*
-      $O.Dynamic.invoke('biz/biz.base');
-      $O.Dynamic.invoke('biz/part/biz.part.base').then(() => {
-          //$O.Core.find('biz.part').init('page1');
-          $O.Core.find('biz.part').init('profile');
-        });
-        */
+      $O.Dynamic.invoke('biz.base');
+      $O.Dynamic.invoke('biz.part.base').then((oClass) => {
+        oClass?.init?.call(oClass, 'profile');
+      });
       window.addEventListener('DOMContentLoaded', function(){
         console.warn(`module - DOMContentLoaded - document.readyState - ${document.readyState}`);
+        /*
         $O.Dynamic.import('biz/biz.base');
         $O.Dynamic.import('biz/part/biz.part.base').then(() => {
             //$O.Core.find('biz.part').init('page1');
             $O.Core.find('biz.part').init('profile');
           });
+        */
       });
     </script>
     <script>
@@ -112,7 +111,6 @@
             $O.tracking('<< fetchJson Result : ', json);              
           });
       };
-        
     </script>
 
 

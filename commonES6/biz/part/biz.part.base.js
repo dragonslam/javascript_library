@@ -7,20 +7,22 @@
     if (!!!$w[root]) return;
 
     const Base  = $w[root];
+	const Utils = Base.Utils;
+	const Fetch = Base.Fetch;
     const Appl  = Base.Core.namespace('biz');
     const Part  = Base.Core.namespace('biz.part');
 	const Module= Base.Core.module(Part);
   
     Part.init	= function(module) {
-		Base.logging(this, 'init()');
+		Base.logging(this, `init(${module})`);
+		if (!!!module) return new Error('need page module!!');
 		const This = this;
 		const path = String('biz/part/{0}.module.{1}').format(This.getClassPath(), module);
-        
-		Module.init();
 
 		Base.Dynamic.import(path).then(() => {
-            Base.Core.find(This.classPath, module).init();
+            Base.Core.find(This, module).init();
 		});
+		Module.init();
 		
 		return This;
 	};
