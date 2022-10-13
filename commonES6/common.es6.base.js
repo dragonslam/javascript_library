@@ -15,6 +15,7 @@
     }
 }) (window);
 
+
 /**
  * common configuration.
  */
@@ -150,6 +151,9 @@
     const Root = root||'';
     const Base = $w[Root];
     const $doc = $w['document'];
+    const _Fix = '__';
+
+    /** base class */
     class Clazz {
         constructor(parent, name, source = {}) {
             this.className  = name;
@@ -178,12 +182,14 @@
             return parts.join('.');
         }
     };
-    const _Fix= '__';
+    /** base class builder */
     const ClassBuilder= (parent, name, source) => new Clazz(parent, name, source);
 
     Base['className'] = Root;
     Base['classPath'] = Root;
+    Base['classHeap'] = {};
     Base.Core = ClassBuilder(Base, 'Core', {
+        /** Find and returns an object that exists in the namespace */
         find : function(target, module = '') {
             if (!target) return undefined;
             let clazz	= (typeof target == 'object') ? target : Base;
@@ -200,6 +206,7 @@
             }
             return module ? clazz[_Fix+module] : clazz;
         },
+        /** Returns the file path of an object as a namespace address */
         path : function(ns) {
             if (!ns) return undefined;
             let paths	= '',
@@ -212,6 +219,7 @@
             }
             return `${paths}/${ns}`;
         },
+        /** Extend object by namespace address */
         namespace : function(ns) {
             if (!ns) return undefined;
             let clazz	= Base,
@@ -228,31 +236,48 @@
                     clazz[_Fix+parts[i]] = ClassBuilder(clazz, parts[i], {
                         classUUID : paths + (Base.user['uNo']?'.'+Base.user['uNo']:'')                        
                     });
+                    Base['classHeap'][ns] = clazz[_Fix+parts[i]];
                 }
                 clazz = clazz[_Fix+parts[i]];
             }
             if (isNewbie) Base.logging(clazz, `namespace( ${ns} )`);
             return clazz;
         },
+        /** Create and return a private built-in object */
         module : function(clazz, source) {
             if (!clazz) return undefined;
             Base.logging(clazz, 'module()');            
-            return ClassBuilder(clazz, 'module', Base.extends(source||{}, {
+            return ClassBuilder(clazz, 'module', Base.extends({}, source||{}, {
                 className : (clazz['className']||Root),
                 classPath : (clazz['classPath']||Root)+'.module',
                 classUUID : (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
             }));
         },
+        /** Inherit the prototype methods from one constructor into another.*/
+        inherits  : function(clazz, parent) {
+            /** @constructor */
+            function fnCls() {}
+            fnCls.prototype = parent.prototype;
+            clazz.superClass= parent.prototype;
+            clazz.prototype = new fnCls();
+            /** @override */
+            clazz.prototype.constructor = clazz;
+            /** Calls superclass constructor/method. */
+            clazz.base = function(me, methodName, var_args) {
+                var args = new Array(arguments.length - 2);
+                for (var i = 2; i < arguments.length; i++) {
+                  args[i - 2] = arguments[i];
+                }
+                return parent.prototype[methodName].apply(me, args);
+            };
+            return clazz;
+        },
+        /** Create and return a private built-in common page object */
         pageModule: function(clazz) {
-            return this.module(clazz, Base.Pages);
+            return this.module(clazz, Base.Control.Pages);
         }, 
         domEval : function(code, node) {
-            let preservedScriptAttributes = {
-                    type: true,
-                    src: true,
-                    nonce: true,
-                    noModule: true
-                },
+            let preservedScriptAttributes = { type: true, src: true, nonce: true, noModule: true },
 			    script = $doc.createElement('script');
                 script.text = code;
             if ( node ) {
@@ -265,45 +290,55 @@
             }
             $doc.head.appendChild( script ).parentNode.removeChild( script );
         },
-        // Promise Factory
+        /** Promise Factory */
         pf : function(executor) {
             return new Promise(executor);
         },
     });
+
+    /** 
+     * Dynamic script loadding helper. 
+     * */
     Base.Dynamic  = ClassBuilder(Base, 'Dynamic', (function(){
-        const _version    = (new Date()).format('yyyymmdd');
+        const _version    = (new Date()).format('yyyymmddHHmi');
         const _dependency = {
-            getModulePath : (file = '') => `modules/common.es6.base.${file}`,
-            getScriptPath : (file = '') => `${Base.config['js_path']}/${file}.js?v=${_version}`,
             modules : {
                 deffers : 0,
-                list: { },
-                add : (m) => {
-                    let This = _dependency.modules;
-                    This.deffers++;
-                    This.list[m['name']] = Base.extends(m, {
+                exports :{},
+                path: function(file = '') {
+                    let paths	= 'modules',
+                        files   = 'common.es6',
+                        parts	= file.split('.');
+                    if (parts[0]=='base') {
+                        parts	= parts.slice(1);
+                    }
+                    for (let i = 0; i < parts.length-1; i++) {
+                        paths = `${paths}/${parts[i]}`;
+                    }
+                    return `${paths}/${files}.${file}.js?v=${_version}`
+                },
+                add : function(m) {
+                    this.deffers++;
+                    this.exports[m['name']] = Base.extends(m, {
                         isLoaded : false,
-                        jsFile   : _dependency.getModulePath(m['file'])
+                        jsFile   : this.path(m['filePath'])
                     });
-                    return This.list[m['name']];
+                    return this.exports[m['name']];
                 },
-                done : (m) => {
-                    let This = _dependency.modules,
-                        That = _dependency.modules.list[m['name']];
-                    This.deffers--; 
-                    That.isLoaded = true;
-                    return That;
+                done : function(m) {
+                    this.deffers--; 
+                    this.exports[m['name']].isLoaded = true;
+                    return this;
                 },
-                failed: (m) => {
-                    let This = _dependency.modules,
-                        That = _dependency.modules.list[m['name']];
-                    That.isLoaded = false;
-                    return That;
+                failed: function(m) {
+                    this.exports[m['name']].isLoaded = false;
+                    return this;
                 },
-                isComplete: ()=> { 
-                    return _dependency.modules.deffers==0; 
+                isComplete: function() { 
+                    return this.deffers==0; 
                 }
             },
+            path    : (file = '') => `${Base.config['js_path']}/${file}.js?v=${_version}`,
             scripts : {}
         };
         const loadScript = function(src, id, isAsync) {
@@ -338,20 +373,9 @@
             };
 
             if (Base.getBrowser().isMsIe() || Base.config['is_debug']) {
-                return tagScriptLoader(src, id, isAsync);
+                return tagScriptLoader();
             } else {
-                return xhrScriptLoader(src, id, isAsync);
-            }     
-        };        
-        const importScript = async function(src = '', id = '', isAsync = true) {
-            if (_dependency?.scripts[id]) {
-                Base.logging(this, `importScript( ${src}, ${id} ) -> loaded.`);
-                return Base.Core.pf(r => r.call(Base));
-            }
-            else {
-                Base.logging(this, `importScript( ${src}, ${id} ) -> loadding.`);
-                _dependency.scripts[id] = _dependency.getScriptPath(src);
-                return loadScript(_dependency.scripts[id], id, isAsync);
+                return xhrScriptLoader();
             }
         };
         const invokeScript = async function(src = '', id = '', isAsync = true) {
@@ -366,23 +390,72 @@
                         if (_chkCount > 10) {
                             if (Base.isFunction(reject)) reject.call(Base, new Error(`${src} dependency module loadding failed.`));
                         } else {
-                            $w.setTimeout(_chkModules, 10);
+                            $w.setTimeout(_chkModules, 1);
                         }
                     }
                 };
-                $w.setTimeout(_chkModules, 100);
+                $w.setTimeout(_chkModules, 0);
+            });
+        };
+        const importScript = async function(src = '', id = '', isAsync = true) {
+            if (_dependency?.scripts[id]) {
+                Base.logging(this, `importScript( ${src}, ${id} ) -> loaded.`);
+                return Base.Core.pf(r => r.call(Base));
+            }
+            else {
+                Base.logging(this, `importScript( ${src}, ${id} ) -> loadding.`);
+                if (_dependency.modules.isComplete()) {
+                    _dependency.scripts[id] = _dependency.path(src);
+                    return loadScript(_dependency.scripts[id], id, isAsync);
+                } 
+                else {
+                    return invokeScript(src, (id||src), isAsync);
+                }
+            }
+        };
+        const importModule = async function(args) {
+            Base.logging(Base, `${args['name']} module import start.`);
+            const oModule = _dependency.modules.add(args);
+            return Base.Core.pf(function(resolve, reject) {
+                const _checkModule = function() {
+                    let _complete = true;
+                    oModule.require?.forEach(name => {
+                        _complete = !(_complete && _dependency.modules.exports[name]?.isLoaded === false);
+                    });
+                    if (_complete) {
+                        _importModule();
+                    } else {
+                        $w.setTimeout(_checkModule, 10);
+                    }
+                };
+                const _importModule = function() {
+                    loadScript(oModule['jsFile'], oModule['name'], oModule['isAsync'])
+                        .then(function() {
+                            _dependency.modules.done(oModule);
+                            Base.tracking(`module import success -> ${oModule['name']}`, arguments);
+                            if (Base.isFunction(resolve)) resolve.call(Base, oModule);
+                        })
+                        .catch(function() {
+                            _dependency.modules.failed(oModule);
+                            Base.tracking(`module import failed -> ${oModule['name']}`, arguments);
+                            if (Base.isFunction(reject)) reject.call(Base, oModule);
+                        });
+                };
+                if (oModule.require?.length > 0) {
+                    _checkModule();
+                } else {
+                    _importModule();
+                }
             });
         };
 
         return {
+            /** import script on the fly */
             import  : async function(src = '', id = '', isAsync = true) {
                 if (!!!src) return undefined;
-                if (_dependency.modules.isComplete()) {
-                    return importScript(src, (id||src), isAsync);
-                } else {                    
-                    return invokeScript(src, (id||src), isAsync);
-                }
+                return importScript(src, (id||src), isAsync);
             },
+            /** import script after document ready */
             invoke  : async function(ns) {
                 if (!ns) return undefined;
                 return Base.Core.pf(function(resolve, reject) {
@@ -393,10 +466,10 @@
                                 Base.logging(Base, `${ns} > Dynamic script invoke complete.`);
                                 if (Base.isFunction(resolve)) resolve.call(Base, Base.Core.find(ns));
                             } else {
-                                $w.setTimeout(_chkObj, 10);
+                                $w.setTimeout(_chkObj, 1);
                             }
                         };
-                        $w.setTimeout(_chkObj, 10);
+                        $w.setTimeout(_chkObj, 0);
                     };
                     const _rejectFn = function() {
                         Base.logging(Base, `${ns} > Dynamic script invoke reject.`);
@@ -406,51 +479,39 @@
                         if ($doc.readyState === 'complete') {
                             invokeScript(Base.Core.path(ns), ns).then(_resolveFn, _rejectFn);
                         } else {
-                            $w.setTimeout(_chkState, 100);
+                            $w.setTimeout(_chkState, 3);
                         }
                     };
-                    $w.setTimeout(_chkState, 100);
+                    $w.setTimeout(_chkState, 0);
                 });
             },
-            module  : async function(parentObj, moduleName, moduleObj) {
-                if (!!!parentObj || !!!moduleName || !!!moduleObj) return;
+            /** import common script module */
+            module  : async function(parentObj, moduleObj) {
+                if (!!!parentObj || !!!moduleObj) return;
                 if (moduleObj['isExtend'] === true) {
-                    if (parentObj[moduleName]) {
+                    if (parentObj[moduleObj['name']]) {
                         return Base.Core.pf(r => r.call(Base));
                     }
-                    parentObj[moduleName] = ClassBuilder(parentObj, moduleName);
+                    parentObj[moduleObj['name']] = ClassBuilder(parentObj, moduleObj['name']);
                 }
-                moduleObj = _dependency.modules.add(moduleObj);
-                return Base.Core.pf(function(resolve, reject) {
-                        importScript(moduleObj['jsFile'], moduleObj['name'], moduleObj['isAsync'])
-                            .then(
-                                function() {
-                                    Base.tracking(`${moduleObj['name']} module import complate.`, arguments);
-                                    _dependency.modules.done(moduleObj);
-                                    resolve.apply(Base, arguments);
-                                },
-                                function() {                                    
-                                    Base.tracking(`${moduleObj['name']} module import failed.`, arguments);
-                                    _dependency.modules.failed(moduleObj);
-                                    reject.apply(Base, arguments);
-                                }
-                            );
-                });
+                return importModule(moduleObj);
             },
-            modules : function(moduleList) {
-                if (moduleList?.length) {
-                    if (Base.config['is_debug']) {
-                        moduleList.unshift({name:'DebugHepler', file:'helper', isAsync:true, isExtend:false});
-                    }
-                    for(let i in moduleList) {
-                        this.module(Base, moduleList[i]['name'], moduleList[i]);
-                    }
+            /** import common script module lists */
+            modules : function(parent, moduleList) {
+                if (Base.config['is_debug'] && !Base.isExtendLogging) {
+                    moduleList.unshift({name:'Debug', filePath:'base.debug', isAsync:true, isExtend:false});
                 }
+                const promiseList = [];
+                for(let i in moduleList) {
+                    promiseList.push(this.module((parent ? parent : Base), moduleList[i]));
+                }
+                return Promise.all(promiseList);
             },
         };
     })());
 
 }) (window, __DOMAIN_NAME||'');
+
 
 /**
  * import base modules
@@ -462,11 +523,21 @@
     const Root = root||'';
     const Base = $w[Root];
 
-    Base.Dynamic.modules([
-        {name:'DomHelper', file:'dom', isAsync:true, isExtend:true},
-        {name:'Utils', file:'utils', isAsync:true, isExtend:true},
-        {name:'Fetch', file:'fetch', isAsync:true, isExtend:true},
-        {name:'Pages', file:'pages', isAsync:true, isExtend:true},
-        {name:'Ui'   , file:'ui'   , isAsync:true, isExtend:true}
-    ]);
+    // base common module.
+    Base.Dynamic.modules(Base, [
+        {name:'DomHelper', filePath:'base.dom'      , isAsync:true, isExtend:true},
+        {name:'Utils'    , filePath:'base.utils'    , isAsync:true, isExtend:true},
+        {name:'Fetch'    , filePath:'base.fetch'    , isAsync:true, isExtend:true},
+        {name:'Control'  , filePath:'base.control'  , isAsync:true, isExtend:true},
+        {name:'Events'   , filePath:'base.events'   , isAsync:true, isExtend:true, require:['DomHelper', 'Utils', 'Fetch']},
+    ]).then(() => {
+        // control module.
+        Base.Dynamic.modules(Base.Control, [
+            {name:'Pages' , filePath:'control.pages' , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch']},
+            {name:'Ui'    , filePath:'control.ui'    , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch', 'DomHelper', 'Event']},
+        ]);
+
+        // ui control module.
+    });   
+
 }) (window, __DOMAIN_NAME||'');

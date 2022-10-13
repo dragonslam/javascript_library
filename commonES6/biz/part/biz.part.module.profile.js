@@ -11,64 +11,67 @@
   const Part  = Base.Core.namespace('biz.part');
   const Page  = Base.Core.namespace('biz.part.profile');
   const Module= Base.Core.pageModule(Page);
-  
-  // Page initializer set.
-  Page?.init(() => Module?.init());
 
-  // Page module initializ.
-  Module.init = function() {
-    Base.logging(this, 'init()');
-    Base.tracking('>> Page Module :: ', this);
-
-    const This = this;
-    This._data = {};
-    This._elem = {
-      container   : $O('#profileBox'),
-      profileImg  : $O('#profileImg'),
-      profileName : $O('#profileName'),
-      profileLoc  : $O('#profileLocation'),
-      profileFlow : $O('#profileFollowers'),
-      profileRepo : $O('#publicRepos'),
-      profileLink : $O('#profileLink'),
-      packageRst  : $O('#packageResult'),
-    };
-    This._cache	= Base.Utils.cache( {prifix:This.classPrifix, span:10, format:'m'} );
-    
-    This.initEventListner(() => {
-        This._elem.profileImg.Bind('click', function() {
-          const profile = This._data['GIT_PROFILE']||{};
-          if (profile['blog']) {
-            $w.open(profile['blog']);
-          }
-        });
-      })
-      .initTransaction('commonES6', {
-        'TRAN_TEST'  : {method:'GET', endpoint:'package.json' ,render:'packageRender' },
-        'TRAN_TEST2' : {method:'GET', endpoint:'package.json' ,render:'packageRender2'},
-        'TRAN_TEST3' : {method:'GET', endpoint:'package.json' ,render:'packageRender,packageRender2' },
-        'GIT_PROFILE': {method:'GET', endpoint:'https://api.github.com/users/dragonslam' ,render:'profileShow' },
-      })
-      .startTransaction({
-        /* tranId : {tranParams} */
-        'TRAN_TEST'  : {'_d' : Date.now()},
-        'TRAN_TEST2' : {},
-        'TRAN_TEST3' : {},
-        'GIT_PROFILE': {}
-      });
-    
-    /* Transaction start */
-    This._runTran('TRAN_TEST', {});
-    return This;
+  const elements = {
+    'container'   : {selecter : '#profileBox'},
+    'profileImg'  : {selecter : '#profileImg' , events:[{'on' : 'click'}]},
+    'profileName' : {selecter : '#profileName', events:[{'on' : 'click', callback:'click_profileName'}]},
+    'profileLoc'  : {selecter : '#profileLocation'},
+    'profileFlow' : {selecter : '#profileFollowers'},
+    'profileRepo' : {selecter : '#publicRepos'},
+    'profileLink' : {selecter : '#profileLink'},
+    'packageRst'  : {selecter : '#packageResult'},
   };
-  Module.packageRender = function(data) {
-    Base.logging(this, 'packageRender()');
+  const transactions = {
+    context : 'commonES6',
+    tranList: {
+      'TRAN_TEST'  : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package' },
+      'TRAN_TEST2' : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package2', isUseCache:false},
+      'TRAN_TEST3' : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package,show_package2' },
+      'GIT_PROFILE': {method:'GET', datatype:'JSON', endpoint:'https://api.github.com/users/dragonslam', render:'show_profile', isUseCache:true, cacheOption:{type:'local', span:60, format:'m'}},
+    }
+  };
+
+  // Page initializ.
+  Page.init(() => {    
+    // Page module initializ.
+    Module.init({
+      cacheOption : {span:10, format:'s'},
+      elements    : elements,
+      transactions: transactions
+    })
+    .startTransaction({
+      /* tranId : {tranParams} */
+      'TRAN_TEST'  : {'_d' : Date.now()},
+      'TRAN_TEST2' : {},
+      'TRAN_TEST3' : {},
+      'GIT_PROFILE': {}
+    });
+  });
+
+  Module.click_profileImg = function(e) {
+    Base.logging(this, 'click_profileImg()');
+    const This = this;
+    const profile = This._data['GIT_PROFILE']||{};
+    if (profile['blog']) {
+      $w.open(profile['blog']);
+    }
+  };
+  Module.click_profileName = function(e) {
+    Base.logging(this, 'click_profileName()');
+    const This = this;
+    This.startTransaction({'TRAN_TEST3' : {'_test': 'testtest'}});
+  };
+
+  Module.show_package = function(data) {
+    Base.logging(this, 'show_package()');
     this._elem.packageRst.Text(Base.Utils.jsonToString(data));
   };
-  Module.packageRender2 = function(data) {
-    Base.logging(this, 'packageRender2()');
+  Module.show_package2 = function(data) {
+    Base.logging(this, 'show_package2()');
   };
-  Module.profileShow = function(data) {
-    Base.logging(this, 'profileShow()');
+  Module.show_profile = function(data) {
+    Base.logging(this, 'show_profile()');
     const This = this;
     const elem = This._elem;
     

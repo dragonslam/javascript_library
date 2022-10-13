@@ -31,7 +31,7 @@
 		Base.logging(this, 'init()');
 		const This = this;
 	
-		Base.tracking('>> Page Module :: ', this);
+		Base.tracking('>> Part Module :: ', this);
 	
 		return This;
 	};

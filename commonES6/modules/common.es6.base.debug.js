@@ -23,7 +23,7 @@
             }
             else {
                 console.log('['+ lvl +'] '+ (msg+(data||'')) );
-            }        
+            }
         },
     };
     const ChromeHelper = {
@@ -44,14 +44,14 @@
             }
             else {
                 console.log(`%c[${oLvl['lvl']}]`, `color:${oLvl['col']};`, (msg+(data||'')) );
-            }        
+            }
         },
     };
     
     if (Base.getBrowser().isChrome() || Base.getBrowser().isSafari()) {
-        Base.extends(Base, ChromeHelper);
+        Base.extends(Base, ChromeHelper, {isExtendLogging:true});
     }
     else {
-        Base.extends(Base, LoggerHelper);
+        Base.extends(Base, LoggerHelper, {isExtendLogging:true});
     }
 }) (window, __DOMAIN_NAME||'');

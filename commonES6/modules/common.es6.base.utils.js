@@ -105,8 +105,9 @@
                         format: 's',
                         prifix: '',
                     }, options||{});
-                    this.type    = options['type'];
-                    this.expires = options['date']||this.#getCacheExpires();
+                    this.type    = this._options['type'];
+                    this.prifix  = this._options['type']+(this._options['prifix'] ? ('/'+this._options['prifix']) : '');
+                    this.expires = this._options['date']||this.#getCacheExpires();
                     this.storage = this.#getCacheStorage();
                 }                
                 #getCacheExpires() {
@@ -146,21 +147,21 @@
                     }
                     const expireTime = Math.round((new Date()).getTime()/1000) + expire;
                     try {
-                        this.storage.setItem(this.type +'@d_'+ name, value);
-                        this.storage.setItem(this.type +'@t_'+ name, expireTime);
+                        this.storage.setItem(this.prifix +'@d_'+ name, value);
+                        this.storage.setItem(this.prifix +'@t_'+ name, expireTime);
                     } catch(e) {
                         // security mode
                     }
                     return this;
                 }
                 get(name) { 
-                    return this.isStatus(name) ? this.storage.getItem(this.type +'@d_'+ name) : '';
+                    return this.isStatus(name) ? this.storage.getItem(this.prifix +'@d_'+ name) : '';
                 }
                 isStatus(name) { 
-                    if (!!!this.storage.getItem(this.type +'@t_'+ name)) return false;
+                    if (!!!this.storage.getItem(this.prifix +'@t_'+ name)) return false;
 
                     var currentTime= Math.round((new Date()).getTime()/1000),
-                        expireTime = this.storage.getItem(this.type +'@t_' + name) || 0;
+                        expireTime = this.storage.getItem(this.prifix +'@t_' + name) || 0;
         
                     // expired
                     if (expireTime < currentTime) {
@@ -170,11 +171,11 @@
                     return true;
                 }
                 remove(name) { 
-                    this.storage.removeItem(this.type +'@d_'+ name);
-                    this.storage.removeItem(this.type +'@t_'+ name);
+                    this.storage.removeItem(this.prifix +'@d_'+ name);
+                    this.storage.removeItem(this.prifix +'@t_'+ name);
                     return this;
                 }
-                clear(name) { 
+                clear() { 
                     for (var item in this.storage) {
                         if (String(item).startWith(this.type)) {
                             this.storage.removeItem(item);

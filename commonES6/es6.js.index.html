@@ -61,55 +61,57 @@
 
     <script type="module">
       console.warn(`module - inline - document.readyState - ${document.readyState}`);
-      $O.Dynamic.invoke('biz.base');
-      $O.Dynamic.invoke('biz.part.base').then((oClass) => {
-        oClass?.init?.call(oClass, 'profile');
-      });
+
+      
       window.addEventListener('DOMContentLoaded', function(){
         console.warn(`module - DOMContentLoaded - document.readyState - ${document.readyState}`);
-        /*
-        $O.Dynamic.import('biz/biz.base');
-        $O.Dynamic.import('biz/part/biz.part.base').then(() => {
-            //$O.Core.find('biz.part').init('page1');
-            $O.Core.find('biz.part').init('profile');
-          });
-        */
       });
     </script>
     <script>
       console.warn(`window - inline - document.readyState - ${document.readyState}`);
+      
+      $O.Dynamic.invoke('biz.base').then(function(oBase) {
+          $O.Dynamic.invoke('biz.part.base').then((oPart) => {
+            oPart?.init?.call(oPart, 'profile');
+          })
+          .catch((e) => console.log(e[0]?.message, e));
+        })
+        .catch((e) => console.log(e[0]?.message, e));
+
       window.addEventListener('DOMContentLoaded', function(){
         console.warn(`window - DOMContentLoaded - document.readyState - ${document.readyState}`);
       });
       window.onload = function() {
         console.warn(`window - onload - document.readyState - ${document.readyState}`);
-          const stringBuilder = $O.Utils.stringBuilder('aaaa')
-                                      .append('bbbb')
-                                      .append('cccc')
-                                      .append('dddd');
-          $O.logging(stringBuilder, '>> StringBuilder : '+ stringBuilder.toString('__'));
+        /*
+        const stringBuilder = $O.Utils.stringBuilder('aaaa')
+                                    .append('bbbb')
+                                    .append('cccc')
+                                    .append('dddd');
+        $O.logging(stringBuilder, '>> StringBuilder : '+ stringBuilder.toString('__'));
 
-          const cookieUtil = $O.Utils.cookie(1);
-          cookieUtil.set('coName', 'coValue');
-          $O.logging(cookieUtil, '>> CookieUtil : '+ cookieUtil.get('coName'));
-          $O.tracking('<< CookieUtil', cookieUtil);
+        const cookieUtil = $O.Utils.cookie(1);
+        cookieUtil.set('coName', 'coValue');
+        $O.logging(cookieUtil, '>> CookieUtil : '+ cookieUtil.get('coName'));
+        $O.tracking('<< CookieUtil', cookieUtil);
 
-          const cacheUtil = $O.Utils.cache({type:'session', span:5, format:'w'});
-          cacheUtil.set('cacheName', 'cacheValue');
-          $O.logging(cacheUtil, '>> CacheUtil : '+ cacheUtil.get('cacheName'));
-          $O.tracking('<< CacheUtil', cacheUtil);
+        const cacheUtil = $O.Utils.cache({type:'session', span:5, format:'w'});
+        cacheUtil.set('cacheName', 'cacheValue');
+        $O.logging(cacheUtil, '>> CacheUtil : '+ cacheUtil.get('cacheName'));
+        $O.tracking('<< CacheUtil', cacheUtil);
 
-          const queryUtil = $O.Utils.querystringHelper();
-          queryUtil.set('qName', 'qValue');
-          $O.logging(queryUtil, '>> QueryUtil : '+ queryUtil.getUrl());
-          $O.tracking('<< QueryUtil', queryUtil);
+        const queryUtil = $O.Utils.querystringHelper();
+        queryUtil.set('qName', 'qValue');
+        $O.logging(queryUtil, '>> QueryUtil : '+ queryUtil.getUrl());
+        $O.tracking('<< QueryUtil', queryUtil);
 
 
-          const fetchJson = $O.Fetch.get('./package.json');
-          $O.tracking('<< FetchJson Promise : ', fetchJson);
-          fetchJson.then((json) => {
-            $O.tracking('<< fetchJson Result : ', json);              
-          });
+        const fetchJson = $O.Fetch.get('./package.json');
+        $O.tracking('<< FetchJson Promise : ', fetchJson);
+        fetchJson.then((json) => {
+          $O.tracking('<< fetchJson Result : ', json);              
+        });
+        */
       };
     </script>
 

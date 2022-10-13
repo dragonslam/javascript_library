@@ -42,8 +42,8 @@ String.prototype.isNumber = function() {
 String.prototype.isFinite = function() {
     return isFinite(this);
 };
+/** 소수점 2자리 까지 */
 String.prototype.isDotNumber = function() {	
-    // 소수점 2자리 까지
     return (this.search(/^(?:\d*\.\d{1,2}|\d+)$/ ) != -1);
 };
 String.prototype.isKor = function() {
@@ -51,6 +51,14 @@ String.prototype.isKor = function() {
 };
 String.prototype.isEmail = function() {
     return (/\w+([-+.]\w+)*@\w+([-.]\w+)*\.[a-zA-Z]{2,4}$/).test(this.trim());
+};
+/** User Identity check.
+ * 1. 6~20자 이내
+ * 2. 영문+숫자 입력 가능(영문으로 시작)
+ * 3. 특수기호 입력불가(단, 언더바/하이픈 허용) 
+ * */
+String.prototype.isSafeIdentity = function() {
+    return (/^[A-Za-z]{1}[A-Za-z0-9_-]{5,19}$/).test(this.trim());
 };
 String.prototype.isUrl = function() {
     return (/(file|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/).test(this.trim());
@@ -63,8 +71,8 @@ String.prototype.isMobile = function() {
     let arg = arguments[0]||'';
     return eval('(/01[016789]'+ arg +'[1-9]{1}[0-9]{2,3}'+ arg +'[0-9]{4}$/).test(this)');
 };
+/** 10진수 숫자로 변환 */
 String.prototype.Int = function() {
-    // 10진수 숫자로 변환.
     return this.isFinite() ? parseInt(this, 10) : parseInt('0');
 };
 String.prototype.Float = function() {
@@ -89,8 +97,8 @@ Number.prototype.parseFloat = function() {
         return String(this).Float();
     }
 };
+/** 숫자에 3자리마다 , 를 찍어서 반환 */
 String.prototype.toComma = function() {	
-    // 숫자에 3자리마다 , 를 찍어서 반환
     let s = (this.nvl('0')).trim();
     if (s.isNumber()) {
         while((/(-?[0-9]+)([0-9]{3})/).test(s)) {
@@ -166,12 +174,12 @@ String.prototype.padRight = function(cnt, str) {
         return this;
     }
 };
-String.prototype.digits = function(cnt)
-{	// 숫자의 자리수(cnt)에 맞도록 반환
+/** 숫자의 자리수(cnt)에 맞도록 반환 */
+String.prototype.digits = function(cnt) {
     return this.padLeft(cnt, '0');
 };
-Number.prototype.digit = function(cnt)
-{	// 숫자의 자리수(cnt)에 맞도록 반환
+/** 숫자의 자리수(cnt)에 맞도록 반환 */
+Number.prototype.digit = function(cnt){
     return String(this).digits(cnt);
 };
 String.prototype.startWith = function(str) {
@@ -188,8 +196,7 @@ String.prototype.endWith = function(str) {
     else
         return false;
 };
-String.prototype.bytes = function()
-{	// 바이트 계산.
+String.prototype.bytes = function() {
     let b = 0;
     for (let i=0; i<this.length; i++) b += (this.charCodeAt(i) > 128) ? 2 : 1;
     return b;
@@ -214,8 +221,8 @@ if (typeof '$'.trimRight != 'function') {
         return this.replace(/(\s*$)/, '');
     }
 }
-String.prototype.substringBytes = function(start, limitBytes)
-{    // 원하는 바이트 까지 잘라서 반환.
+/** 원하는 바이트 까지 잘라서 반환. */
+String.prototype.substringBytes = function(start, limitBytes) {
     let b = 0, l = 0, s = '';
     for(let i=0; i<this.length; i++) {
         b = (this.charCodeAt(i) > 128) ? 2 : 1;
@@ -245,7 +252,7 @@ String.prototype.remove = function(str) {
     else
         return this;
 };
-// "{0} is dead, but {1} is alive! {0} {2}".format("ASP", "ASP.NET")
+/** "{0} is dead, but {1} is alive! {0} {2}".format("sarah kerrigan", "Zerg Queen") */
 String.prototype.format = function() {
     let args = arguments;
     return this.replace(/{(\d+)}/g, function(match, number) {
@@ -318,13 +325,14 @@ Number.prototype.devide = function(q) {
     let r = this / parseInt(q);
     return isNaN(r)?0:r;
 };
-String.prototype.devide = function(q) { // ','가 포함된숫자 처리, 0으로 나눌 때 처리
+/** ','가 포함된숫자 처리, 0으로 나눌 때 처리 */
+String.prototype.devide = function(q) {
     let a = isNaN(this.getNumber())?0:this.getNumber(),
         b = isNaN(q)?0:q,
         r = a / b;
     return isNaN(r)?0:r;
 }
-//날자 체크 (년/월/일 검사)
+/** 날자 체크 (년/월/일 검사) */
 String.prototype.isDate = function() {
     // yyyy-mm-dd
     if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1])$/).test(this)) return true;
@@ -337,11 +345,11 @@ String.prototype.isDate = function() {
 
     return false;
 };
-//시간 체크    hh:mm:ss
+/** 시간 체크    hh:mm:ss */
 String.prototype.isTime = function() {
     return (/^(2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this);
 };
-//날자시간 체크 
+/** 날자 시간 체크  */
 String.prototype.isDateTime = function() {
     // yyyy-mm-dd hh:mm:ss
     if ((/^(19|20)\d{2}[\/-](0[1-9]|1[012])[\/-](0[1-9]|[12][0-9]|3[0-1]) (2[0-3]|[0-1]\d)(:[0-5]\d){1,2}$/).test(this)) return true;
@@ -579,11 +587,11 @@ String.prototype.toMeridiem = function(type) {
 Date.prototype.toMeridiem = function(type) {
     return this.getHours().toMeridiem();
 };
-//  "20080223153033".toDate().format('yyyy-mm-dd hh:mi:ss E0')
+/** "20080223153033".toDate().format('yyyy-mm-dd hh:mi:ss E0') */
 Date.prototype.format = function (f) {
     if (!this.valueOf()) return ' ';
     let d = this;
-    return f.replace(/(yyyy|yy|mm|dd|yw|mw|E0|E1|E2|hh|mi|ss|a\/p)/gi, function ($1) {
+    return f.replace(/(yyyy|yy|mm|dd|yw|mw|E0|E1|E2|HH|hh|mi|ss|a\/p)/gi, function ($1) {
         switch ($1) {
             case 'yyyy': return d.getFullYear();
             case 'yy' : return String(d.getFullYear() % 1000).digits(2);
