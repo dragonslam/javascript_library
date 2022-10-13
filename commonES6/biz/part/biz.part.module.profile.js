@@ -14,8 +14,8 @@
 
   const elements = {
     'container'   : {selecter : '#profileBox'},
-    'profileImg'  : {selecter : '#profileImg' , events:[{'on' : 'click'}]},
-    'profileName' : {selecter : '#profileName', events:[{'on' : 'click', callback:'click_profileName'}]},
+    'profileImg'  : {selecter : '#profileImg' , events:[{'on':'click'}]},
+    'profileName' : {selecter : '#profileName', events:[{'on':'click', callback:'click_profileName'}]},
     'profileLoc'  : {selecter : '#profileLocation'},
     'profileFlow' : {selecter : '#profileFollowers'},
     'profileRepo' : {selecter : '#publicRepos'},

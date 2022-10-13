@@ -47,9 +47,11 @@
 			const Page = this.page;
 			Object.keys(elementList).forEach((id) => {
 				const elem = elementList[id];
+				/** Select HTML elements. */
 				if (elem['selecter']) {
 					Page._elem[id] = Base(elem.selecter);
 				}
+				/** Bind events to HTML elements. */
 				if (elem['events']) {
 					Object.keys(elem.events).forEach((idx) => {													
 						let _event = elem.events[idx];
@@ -119,7 +121,7 @@
 				Tran.isRunning = true;
 				Fetch[Tran.method.toLowerCase()].call(Page, apiUrl, params)
 					.then(function(data) {
-						if (isUseCache ) { //&& !!!Base.config['is_debug']
+						if (isUseCache && !!!Base.config['is_debug'] ) {
 							Cache.set(uniqueName, JSON.stringify(data));
 						}
 						Page._data[tranId] = data;
