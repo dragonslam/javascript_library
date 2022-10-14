@@ -60,18 +60,17 @@
     </div>
 
     <script type="module">
-      console.warn(`module - inline - document.readyState - ${document.readyState}`);
-
-      
+      console.warn(`module.inline.DocumentState - ${document.readyState}`);
+            
       window.addEventListener('DOMContentLoaded', function(){
-        console.warn(`module - DOMContentLoaded - document.readyState - ${document.readyState}`);
+        console.warn(`module.DOMContentLoaded.DocumentState - ${document.readyState}`);
       });
     </script>
     <script>
-      console.warn(`window - inline - document.readyState - ${document.readyState}`);
+      console.warn(`window.inline.DocumentState - ${document.readyState}`);
       
-      $O.Dynamic.invoke('biz.base').then(function(oBase) {
-          $O.Dynamic.invoke('biz.part.base').then((oPart) => {
+      $O.Define.invoke('biz.base').then(function(oBase) {
+          $O.Define.invoke('biz.part.base').then((oPart) => {
             oPart?.init?.call(oPart, 'profile');
           })
           .catch((e) => console.log(e[0]?.message, e));
@@ -79,10 +78,6 @@
         .catch((e) => console.log(e[0]?.message, e));
 
       window.addEventListener('DOMContentLoaded', function(){
-        console.warn(`window - DOMContentLoaded - document.readyState - ${document.readyState}`);
-      });
-      window.onload = function() {
-        console.warn(`window - onload - document.readyState - ${document.readyState}`);
         /*
         const stringBuilder = $O.Utils.stringBuilder('aaaa')
                                     .append('bbbb')
@@ -112,7 +107,7 @@
           $O.tracking('<< fetchJson Result : ', json);              
         });
         */
-      };
+      });
     </script>
 
 

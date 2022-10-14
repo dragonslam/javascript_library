@@ -2,7 +2,9 @@
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/10/05
 */
-(function($w, root = '') {
+(function($w, root) {
+    'use strict';
+    
     if (!!!$w) return;
     if (!!!$w[root]) return;
 

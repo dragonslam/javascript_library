@@ -5,6 +5,8 @@
     - common DOM Element helper.
 */
 (function($w, root) {
+    'use strict';
+
     if (!!!$w) return;    
     if (!!!$w[root]) return;
 
@@ -77,7 +79,7 @@
             if (className && this['classList']) return this['classList']['contains'].call(this, className);
             return false;
         },
-        /** addEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener 
+        /** Bind is addEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener 
          *  event Type : https://developer.mozilla.org/ko/docs/Web/Events
         */
         Bind    : function(type, listener, options = {}, useCapture = false) {
@@ -88,7 +90,7 @@
             }, Base.extends({capture:useCapture, once:false, passive:true, signal:undefined}, options), useCapture);
             return That;
         },
-        /** removeEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/removeEventListener */
+        /** Unbind is removeEventListener : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/removeEventListener */
         Unbind  : function(type, listener = undefined, options = {}, useCapture = false) {
             if (!type) return this;
             let That = this;
@@ -97,7 +99,7 @@
             }, Base.extends({capture:useCapture}, options), useCapture);
             return That;
         },
-        /** dispatchEvent : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/dispatchEvent */
+        /** Trigger is dispatchEvent : https://developer.mozilla.org/ko/docs/Web/API/EventTarget/dispatchEvent */
         Trigger : function(type) {
             if (!type) return this;
             if (this['dispatchEvent']) this.dispatchEvent(type);

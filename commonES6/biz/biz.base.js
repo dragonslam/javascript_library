@@ -3,6 +3,8 @@
  	date, 2022/04/19
 */
 (function($w, root) {
+	'use strict';
+	
     if (!!!$w) return;
     if (!!!$w[root]) return;
 

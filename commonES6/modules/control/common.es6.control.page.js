@@ -2,7 +2,9 @@
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/18
 */
-(function($w, root = '') {
+(function($w, root) {
+	'use strict';
+
     if (!!!$w) return;
     if (!!!$w[root]) return;
 
@@ -10,7 +12,7 @@
 	const Utils= Base.Utils;
 	const Fetch= Base.Fetch;
 
-	const PageOptions = {
+	const PageControlOptions = {
 		cacheOption : { /** Utils.cache initialize options */ },
 		elements 	: { /** List of HTML Element objects to use on the page */ 
 			selecter: '',
@@ -19,32 +21,46 @@
 		events   	: { /** List of events. Attach to the HTML Element object for use in the page */ },
 		transactions: { /** Setting up the API that the page calls */
 			context : ""/** The main context name of the API called by the page */,
-			tranList: { /** List of APIs that the page calls */ }
+			tranList: { /** List of APIs that the page calls */ 
+				'tranid': {
+					method		: 'GET', 		/** GET, POST, PUT, DEL */
+					datatype	: 'JSON', 		/** datatype : JSON, TEXT, HTML, default : JSON */
+					endpoint:'endpoint.action', /** Api call url : `/${context}/${endpoint}` */
+					render		: 'show_tranid',/** Function name to receive and process the result after completing the API call  */
+					isUseCache	: true, 		/** Use a data cache. default : true */
+					cacheOption	: {type:'local', span:60, format:'m'} /** Utils.cache class option. */
+				}
+			}
 		}
 	};
-	const Handler = function(oPage, options = undefined) {
-		this.page = oPage;
-		this.options = Base.extends({}, PageOptions, (options||{}));
-		this._initPage();
-	};
-	Handler.prototype = {
-		_initPage : function() {
-			this._initCacheHelper(this.options?.cacheOption)
-				._initElementSelecter(this.options?.elements)
-				._initTransaction(this.options?.transactions)
+	
+
+	class PageControlHandler {
+		constructor(oPage, options = {}) {
+			this.page = oPage;
+			this.options = Base.extends({}, PageControlOptions, (options||{}));
+			this.#initPage();
+		}	
+		#initPage() {
+			this.#initCacheHelper(this.options?.cacheOption)
+				.#initElementSelecter(this.options?.elements)
+				.#initTransaction(this.options?.transactions)
 			;
 			return this;
-		},
-		_initCacheHelper : function(opts = {}) {
+		}
+		#initCacheHelper(opts = {}) {
 			Base.logging(this.page, '_initCacheHelper()');
 			const Page = this.page;
 			const Opts = Base.extends({}, {prifix:Page.classUUID, span:10, format:'m'}, opts);
 			Page._cache= Utils.cache( Opts );
 			return this;
-		},
-		_initElementSelecter: function(elementList = {}) {
+		}
+		#initElementSelecter(elementList = {}) {
 			Base.logging(this.page, '_initElementSelecter()');
 			const Page = this.page;
+			if (!elementList['container']) {
+				throw new Error('The HTML Element value of the entire region(container) of the Page control is undefined.');
+			}
 			Object.keys(elementList).forEach((id) => {
 				const elem = elementList[id];
 				/** Select HTML elements. */
@@ -62,8 +78,8 @@
 				}
 			});
 			return this;
-		},
-        _initEventListner : function(events = {}) {
+		}
+        #initEventListner(events = {}) {
 			Base.logging(this.page, '_initEventListner()');
 			const Page = this.page;
 			Object.keys(events).forEach((id) => {
@@ -73,15 +89,15 @@
 				});
 			});
 			return this;
-		},
-		_initTransaction : function(transactions = {}) {
+		}
+		#initTransaction(transactions = {}) {
 			Base.logging(this.page, '_initTransaction()');
 			const Page = this.page;
 			Page._env.tranContext = transactions?.context;
 			Page._env.trans = transactions?.tranList;
 			return this;
-		},
-		_runTransaction : function(tranId, params = {}) {
+		}
+		_runTransaction(tranId, params = {}) {
 			let This = this,
 				Page = this.page,
 				Env  = this.page._env,
@@ -103,8 +119,8 @@
 				Base.logging(Page, `_runTransaction(${tranId})->UseCache`);
 				Tran.isRunning = false;
 				Page._data[tranId] = JSON.parse(Cache.get(uniqueName));
-				This._tranSuccess(tranId);
-				This._tranComplete();
+				This.#tranSuccess(tranId);
+				This.#tranComplete();
 			}
 			else {
 				Base.logging(Page, `_runTransaction(${tranId})->UseFetch`);				
@@ -125,17 +141,17 @@
 							Cache.set(uniqueName, JSON.stringify(data));
 						}
 						Page._data[tranId] = data;
-						This._tranSuccess(tranId)
-							._tranComplete();
+						This.#tranSuccess(tranId)
+							.#tranComplete();
 					})
 					.catch(function(error) {
-						This._tranError(tranId, error)						
-							._tranComplete();
+						This.#tranError(tranId, error)						
+							.#tranComplete();
 					});
 			}
 			return This;
-		},
-		_tranSuccess : function(tranId) {
+		}
+		#tranSuccess(tranId) {
 			let Page = this.page,
 				Tran = Page._env.trans[tranId],
 				Data = Page._data[tranId];
@@ -148,15 +164,20 @@
 				});
 			Tran.isRunning = false;
 			return this;
-		},
-		_tranError : function(tranId, error) {
+		}
+		#tranError(tranId, error) {
 			let Page = this.page,
 				Tran = Page._env.trans[tranId];
 			Base.tracking(`${Page['classPath']}._tranError(${tranId}) =>`, error);
+			let renders=Tran['render'].split(',');
+				renders.forEach(render => {
+					Base.tracking(`${Page['classPath']}._tranRender(${tranId}).call(${render}) =>`, Data);
+					Page[render]?.call(Page, {}, error);
+				});			
 			Tran.isRunning = false;
 			return this;
-		},
-		_tranIsRun : function() {
+		}
+		#tranIsRun() {
 			let Page = this.page,
 				Trans= Page._env.trans;
 			let isRun = false;
@@ -167,17 +188,17 @@
 			}
 			Page._env.isRunningTran = isRun;
 			return isRun;
-		},
-		_tranComplete : function() {
-			if(!this._tranIsRun()) {
+		}
+		#tranComplete() {
+			if(!this.#tranIsRun()) {
 				Base.logging(this.page, `_tranComplete() => Transaction All Complete.`);
 			}
-		},
+		}
 	};
 
-	const Pages = {
+	const PageControl = {
 		_env	: {
-			isUseCache	 : true,
+			isUseCache	 : false,
 			isRunningTran: false,
 			tranContext	 : '',
 			trans : {}
@@ -190,25 +211,51 @@
 		init 	: function(options = {}) {
 			Base.logging(this, 'init()');
 			Base.tracking('>> Page Module :: ', this);
-			this.handler = new Handler(this, options);
+			this.handler = new PageControlHandler(this, options);
 			return this;
 		},
-		startTransaction: function(runTrans = {}) {
+		createGrid: function(elementId, transactionId, columns = {}, options = {}, handler = {}) {
+			Base.logging(this, `createGrid(${elementId}, ${transactionId})`);
+
+			return this;
+		},
+		startTransaction: function(runTran = {}, param = {}) {
 			Base.logging(this, 'startTransaction()');
 			const This = this;
-			Object.keys(runTrans).forEach((tranId) => {
-				if (This._env.trans[tranId]) {
-					This.handler._runTransaction(tranId, runTrans[tranId]);
+			if (typeof runTran == 'object') {
+				Object.keys(runTran).forEach((tranId) => {
+					if (This._env.trans[tranId]) {
+						This.handler._runTransaction(tranId, runTran[tranId]);
+					}
+				});
+			} else if (typeof runTran == 'string') {
+				if (This._env.trans[runTran]) {
+					This.handler._runTransaction(runTran, param);
 				}
-			});
+			}			
 			return this;
 		},
 		show : function() {
 			Base.logging(this, 'show()');
+			this._elem['container']?.Show();
 			return this;
 		},
+		hide : function() {
+			Base.logging(this, 'hide()');
+			this._elem['container']?.Hide();
+			return this;
+		},
+		find : function(...arg) {
+			Base.logging(this, 'find()');
+			return this._elem['container']?.Find(arg);
+		},
 	};
-    
-    Base.extends(Base.Control.Pages, Pages);
+	        
+    Base.extends(Base.Control.Page, {
+		/** Create and return a private built-in common page control object */
+		createPageControl : function(pageClass) {
+			return Base.Core.module(pageClass, PageControl, 'PageControl');
+		}
+	});
 
 }) (window, __DOMAIN_NAME||'');

@@ -19,7 +19,7 @@
 		const This = this;
 		const path = String('biz/part/{0}.module.{1}').format(This.getClassPath(), module);
 
-		Base.Dynamic.import(path).then(() => {
+		Base.Define.import(path).then(() => {
             Base.Core.find(This, module).init();
 		});
 		Module.init();

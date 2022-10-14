@@ -4,6 +4,8 @@
     update, 2022/04/18
 */
 (function($w) {
+    'use strict';
+
     if (!!!$w) return;
     if (!!!$w['console']) {
         $w.logStack	= [];
@@ -11,6 +13,7 @@
             log : (s) => logStack.push('[Log]'+ s),
             dir : (s) => logStack.push('[Dir]'+ s),
             wtf : (s) => logStack.push('[Wtf]'+ s),
+            warn: (s) => logStack.push('[War]'+ s),
         };
     }
 }) (window);
@@ -19,9 +22,11 @@
 /**
  * common configuration.
  */
-(function($w, root, configuration = {}) {
-    if (!!!$w) return;
+(function($w, root, configuration) {
+    'use strict';
 
+    if (!!!$w) return;
+    const $d   = $w.document;
     const Base = $w['$O'] = $w[root] = ($w[root]||function() {
         return Base['DomHelper'] && Base['DomHelper'].apply($w, arguments);
     });
@@ -30,11 +35,17 @@
         js_common_path	: '/js',
         js_path			: '/js',
         image_path		: '/img',
-    }, configuration);
+    }, configuration||{});
 
     Base.user  = $w['$U'] = ($w['$U']||{uId:'', uNo:Date.now(), uNm:''});
     Base.wtf   = Base.logging = Base.tracking = function(){};
 
+    if (Base.config['is_debug']) {
+        $w.onload = () => $w.console.warn(`window.onload.DocumentState - ${document.readyState}`);
+        $w.onpageshow = () => $w.console.warn(`window.onpageshow.DocumentState - ${document.readyState}`);
+        $w.onunload = () => $w.console.warn(`window.onunload.DocumentState - ${document.readyState}`);
+        $d.onreadystatechange = () => $w.console.warn(`document.readystatechange - ${document.readyState}`);
+    }
 }) (window, __DOMAIN_NAME||'', __DOMAIN_CONF||{});
 
 
@@ -42,6 +53,8 @@
  * common fn.
  */
  (function($w, root) {
+    'use strict';
+
     if (!!!$w) return;
     if (!!!$w[root]) return;
 
@@ -144,6 +157,8 @@
  * - script import
  */
 (function($w, root) {
+    'use strict';
+
     if (!!!$w) return;
     if (!!!$w[root]) return;
     if (!!!$w['document']) return;
@@ -169,7 +184,6 @@
             }
             else if (Base.isFunction(This.initializer)) {
                 This.initializer.call(This);
-                This.initializer = undefined;
             }
             return this;
         }
@@ -244,38 +258,34 @@
             return clazz;
         },
         /** Create and return a private built-in object */
-        module : function(clazz, source) {
+        module : function(clazz, source, type = 'module') {
             if (!clazz) return undefined;
             Base.logging(clazz, 'module()');            
-            return ClassBuilder(clazz, 'module', Base.extends({}, source||{}, {
+            return ClassBuilder(clazz, type, Base.extends({}, source||{}, {
                 className : (clazz['className']||Root),
-                classPath : (clazz['classPath']||Root)+'.module',
+                classPath : (clazz['classPath']||Root)+'.'+type,
                 classUUID : (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
             }));
         },
         /** Inherit the prototype methods from one constructor into another.*/
-        inherits  : function(clazz, parent) {
+        inherits  : function(child, parent) {
             /** @constructor */
-            function fnCls() {}
-            fnCls.prototype = parent.prototype;
-            clazz.superClass= parent.prototype;
-            clazz.prototype = new fnCls();
+            function objet() {}
+            objet.prototype = parent.prototype;
+            child.superClass= parent.prototype;
+            child.prototype = new objet();
             /** @override */
-            clazz.prototype.constructor = clazz;
+            child.prototype.constructor = child;
             /** Calls superclass constructor/method. */
-            clazz.base = function(me, methodName, var_args) {
+            child.base = function(me, methodName) {
                 var args = new Array(arguments.length - 2);
                 for (var i = 2; i < arguments.length; i++) {
                   args[i - 2] = arguments[i];
                 }
                 return parent.prototype[methodName].apply(me, args);
             };
-            return clazz;
+            return child;
         },
-        /** Create and return a private built-in common page object */
-        pageModule: function(clazz) {
-            return this.module(clazz, Base.Control.Pages);
-        }, 
         domEval : function(code, node) {
             let preservedScriptAttributes = { type: true, src: true, nonce: true, noModule: true },
 			    script = $doc.createElement('script');
@@ -297,9 +307,10 @@
     });
 
     /** 
-     * Dynamic script loadding helper. 
+     * AMD(Asynchronous Module Definition) helper. 
+     * - dynamic script loadding.
      * */
-    Base.Dynamic  = ClassBuilder(Base, 'Dynamic', (function(){
+    Base.Define = ClassBuilder(Base, 'Define', (function(){
         const _version    = (new Date()).format('yyyymmddHHmi');
         const _dependency = {
             modules : {
@@ -486,19 +497,19 @@
                 });
             },
             /** import common script module */
-            module  : async function(parentObj, moduleObj) {
-                if (!!!parentObj || !!!moduleObj) return;
-                if (moduleObj['isExtend'] === true) {
-                    if (parentObj[moduleObj['name']]) {
+            module  : async function(parent, module) {
+                if (!!!parent || !!!module) return;
+                if (module['isExtend'] === true) {
+                    if (parent[module['name']]) {
                         return Base.Core.pf(r => r.call(Base));
                     }
-                    parentObj[moduleObj['name']] = ClassBuilder(parentObj, moduleObj['name']);
+                    parent[module['name']] = ClassBuilder(parent, module['name']);
                 }
-                return importModule(moduleObj);
+                return importModule(module);
             },
             /** import common script module lists */
             modules : function(parent, moduleList) {
-                if (Base.config['is_debug'] && !Base.isExtendLogging) {
+                if (Base.config['is_debug'] && !Base['isExtendLogging']) {
                     moduleList.unshift({name:'Debug', filePath:'base.debug', isAsync:true, isExtend:false});
                 }
                 const promiseList = [];
@@ -517,6 +528,8 @@
  * import base modules
  */
  (function($w, root) {
+    'use strict';
+
     if (!!!$w) return;    
     if (!!!$w[root]) return;
 
@@ -524,17 +537,17 @@
     const Base = $w[Root];
 
     // base common module.
-    Base.Dynamic.modules(Base, [
-        {name:'DomHelper', filePath:'base.dom'      , isAsync:true, isExtend:true},
-        {name:'Utils'    , filePath:'base.utils'    , isAsync:true, isExtend:true},
-        {name:'Fetch'    , filePath:'base.fetch'    , isAsync:true, isExtend:true},
-        {name:'Control'  , filePath:'base.control'  , isAsync:true, isExtend:true},
-        {name:'Events'   , filePath:'base.events'   , isAsync:true, isExtend:true, require:['DomHelper', 'Utils', 'Fetch']},
+    Base.Define.modules(Base, [
+        {name:'DomHelper', filePath:'base.dom'     , isAsync:true, isExtend:true},
+        {name:'Utils'    , filePath:'base.utils'   , isAsync:true, isExtend:true},
+        {name:'Fetch'    , filePath:'base.fetch'   , isAsync:true, isExtend:true},
+        {name:'Control'  , filePath:'base.control' , isAsync:true, isExtend:true},
+        {name:'Events'   , filePath:'base.events'  , isAsync:true, isExtend:true, require:['DomHelper', 'Utils', 'Fetch']},
     ]).then(() => {
         // control module.
-        Base.Dynamic.modules(Base.Control, [
-            {name:'Pages' , filePath:'control.pages' , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch']},
-            {name:'Ui'    , filePath:'control.ui'    , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch', 'DomHelper', 'Event']},
+        Base.Define.modules(Base.Control, [
+            {name:'Page' , filePath:'control.page' , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch']},
+            {name:'Ui'   , filePath:'control.ui'   , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch', 'DomHelper', 'Event']},
         ]);
 
         // ui control module.

@@ -3,14 +3,16 @@
  	date, 2022/04/22
 */
 (function($w, root) {
+  'use strict';
+
   if (!!!$w) return;
   if (!!!$w[root]) return;
 
   const Base  = $w[root];
   const Appl  = Base.Core.namespace('biz');
   const Part  = Base.Core.namespace('biz.part');
-  const Page  = Base.Core.namespace('biz.part.profile');
-  const Module= Base.Core.pageModule(Page);
+  const Page  = Base.Core.namespace('biz.part.profile');  
+  const Module= Base.Control.Page.createPageControl(Page);
 
   const elements = {
     'container'   : {selecter : '#profileBox'},
@@ -26,11 +28,15 @@
     context : 'commonES6',
     tranList: {
       'TRAN_TEST'  : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package' },
-      'TRAN_TEST2' : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package2', isUseCache:false},
+      'TRAN_TEST2' : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package2', isUseCache:true},
       'TRAN_TEST3' : {method:'GET', datatype:'JSON', endpoint:'package.json', render:'show_package,show_package2' },
       'GIT_PROFILE': {method:'GET', datatype:'JSON', endpoint:'https://api.github.com/users/dragonslam', render:'show_profile', isUseCache:true, cacheOption:{type:'local', span:60, format:'m'}},
     }
   };
+
+  const grid_columns = {};
+  const grid_options = {};
+  const grid_handler = {};
 
   // Page initializ.
   Page.init(() => {    
@@ -40,6 +46,7 @@
       elements    : elements,
       transactions: transactions
     })
+    .createGrid('element_id', 'tran_id', grid_columns, grid_options, grid_handler)
     .startTransaction({
       /* tranId : {tranParams} */
       'TRAN_TEST'  : {'_d' : Date.now()},
