@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>JavaScript Validation API</h1>
+
+<form id="userForm">
+  <div>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+  </div>
+  <div>
+    <label for="age">Age:</label>
+    <input type="number" id="age" name="age" min="18" max="100" required>
+  </div>
+  <div>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+  </div>
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+// JavaScript 코드
+const form = document.getElementById('userForm');
+form.addEventListener('submit', (event) => {
+  event.preventDefault(); // 기본 동작 취소
+  if (form.checkValidity()) {
+    // 유효성 검사 통과
+    console.log('Form is valid');
+    // 여기에서 서버로 데이터를 전송하거나, 다음 단계로 이동하는 등의 작업을 수행합니다.
+  } else {
+    // 유효성 검사 실패
+    form.reportValidity(); // 오류 메시지 출력
+  }
+});
+</script>
+
+</body>
+</html>
+
