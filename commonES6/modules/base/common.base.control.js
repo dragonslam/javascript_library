@@ -1,7 +1,4 @@
-/* common.es6.base.control.js
- 	writ by yi seung-yong(dragonslam@nate.com)
- 	date, 2022/10/05
-*/
+/** common.base.control.js */
 (function($w, root) {
     'use strict';
 
@@ -9,14 +6,17 @@
     if (!!!$w[root]) return;
 
     const Base = $w[root];
-	const Utils= Base.Utils;
-	const Fetch= Base.Fetch;
-    
+
     /**
      * Default implementation of control.
      * @param {*} element 
      */
-    const Control = {};
+    const Control = Base.Control;
+
+    /**
+     * HashNumber used to generate a default prime number. 
+     */
+    Control.HashNumber = 0x5F5E0E3;
 
     /**
      * Common events fired by controls so that event propagation is useful.  Not
@@ -104,34 +104,73 @@
         throw new Error(Control.Error.STATE_INVALID);
     };
 
-    Control.ControlBase = function(element) {
-        this.element    = element||undefined;
-        this.isDocument = false;
-        this.id         = null;
-        this.dom        = null;
-        this.model      = null;
-        this.parent     = null;
-        this.children   = null;
-        this.template   = null;
-    };
-    Control.ControlBase.prototype= {
-        getId : function() {
-            return this.id||'';
-        },
-        setId : function(id) {
-            this.id = id;
-        },
-        getElement : function() {
-            return this.element;
-        },
-        setElement : function(element) {
-            this.element = element;
-        },
-        getDom : function() {
-            return this.dom;
-        },
+    const ControlContext = {
+        controlNumber : 0,
+        getControlNumber : function() {
+          return ++ControlContext.controlNumber;
+        }
     };
 
-    Base.extends(Base.Control, Control);
+    class ControlBase {
+      constructor(parent) {
+          this._parent    = parent;
+          this._container = null;
+          this._elements  = null;
+          this._isInit    = false;
+          this._isDebug   = !!Base['isDebug'];
+          this._id        = '';
+          this._template  = '';
+          this._data      = {};
+          this._controlNum= ControlContext.getControlNumber();
+      }
+      getId() {
+          return this._id||'';
+      }
+      setId(id) {
+          this._id = id;
+      }
+      getHashNumber(str, length = 10) {
+        return String(Base.Utils.hashing(str, Control.HashNumber)).digits(length);
+      }
+      getContainer(idx) {
+          if (this._container && this._container instanceof NodeList && typeof idx == 'number') {
+            return this._container[idx];
+          }
+          return this._container;
+      }
+      setContainer(container) {
+          this._container = container;
+      }
+      getParent() {
+          return this._parent;
+      }
+      setParent(parent) {
+          this._parent = parent;
+      }
+      getElements() {
+          return this._elements;
+      }
+      setElements(elements) {
+          this._elements = elements;
+      }
+      bind(name, callback, isExtend = true) {
+          if (!name || !callback) return;
+          const This = this;       
+          const Befor= This[name]; 
+          This[name] = (...args)=>{
+              if (Base.isFunction(Befor)) Befor?.apply(This, args);
+              if (Base.isFunction(callback)) callback.apply(This, args);
+          }
+          if (This._parent && isExtend) {
+              const Asis= This._parent[name];
+              This._parent[name] = (...args)=>{
+                  if (Base.isFunction(Asis)) Asis?.apply(This._parent, args);
+                  This[name].apply(This, args);
+              }
+          }
+      }
+    }
+
+    Control.ControlBase = ControlBase;
 
 }) (window, __DOMAIN_NAME||'');

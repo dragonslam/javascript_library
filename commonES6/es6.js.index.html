@@ -1,9 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0,minimum-scale=1.0" />
+		<meta name="format-detection" content="telephone=no, address=no, email=no" />
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
@@ -14,8 +16,9 @@
         const __DOMAIN_NAME = 'dragonslam';
         const __DOMAIN_CONF = {
             is_debug      : true,
-            js_common_path: 'http://dev.dragonslam.net/commonES6',
-            js_path			  : 'http://dev.dragonslam.net/commonES6',
+            js_base_name  : 'biz',
+            js_common_path: 'http://dev.dragonslam.net/commonES6/modules',
+            js_path			  : 'http://dev.dragonslam.net/commonES6/biz',
             image_path		: 'http://dev.dragonslam.net',
             scheme			  : 'http',
             site_no			  : '1300001',
@@ -30,8 +33,13 @@
             app_ver			  : '',
         };
     </script>
-    <script src="./common.es6.js"></script>
-    <script src="./common.es6.base.js"></script>
+    <script type="text/javascript" src="./common.es6.js"></script>
+    <script type="text/javascript" src="./common.es6.base.js"></script>
+    <script type="text/javascript">
+      window.addEventListener('DOMContentLoaded', function () {
+          window[__DOMAIN_NAME]['Define']['invoker'](__DOMAIN_CONF['js_base_name'] + '.part.profile');
+      });
+    </script>
   </head>
   <body>
     <h1>Hello, world!</h1>
@@ -67,16 +75,7 @@
       });
     </script>
     <script>
-      console.warn(`window.inline.DocumentState - ${document.readyState}`);
-      
-      $O.Define.invoke('biz.base').then(function(oBase) {
-          $O.Define.invoke('biz.part.base').then((oPart) => {
-            oPart?.init?.call(oPart, 'profile');
-          })
-          .catch((e) => console.log(e[0]?.message, e));
-        })
-        .catch((e) => console.log(e[0]?.message, e));
-
+      console.warn(`window.inline.DocumentState - ${document.readyState}`);     
       window.addEventListener('DOMContentLoaded', function(){
         /*
         const stringBuilder = $O.Utils.stringBuilder('aaaa')
@@ -109,8 +108,5 @@
         */
       });
     </script>
-
-
-
   </body>
 </html>

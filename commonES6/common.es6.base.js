@@ -1,27 +1,4 @@
-/* common.es6.base.js
- 	writ by yi seung-yong(dragonslam@nate.com)
- 	date, 2022/04/14
-    update, 2022/04/18
-*/
-(function($w) {
-    'use strict';
-
-    if (!!!$w) return;
-    if (!!!$w['console']) {
-        $w.logStack	= [];
-	    $w.console	= {
-            log : (s) => logStack.push('[Log]'+ s),
-            dir : (s) => logStack.push('[Dir]'+ s),
-            wtf : (s) => logStack.push('[Wtf]'+ s),
-            warn: (s) => logStack.push('[War]'+ s),
-        };
-    }
-}) (window);
-
-
-/**
- * common configuration.
- */
+/** common configuration. */
 (function($w, root, configuration) {
     'use strict';
 
@@ -37,9 +14,9 @@
         image_path		: '/img',
     }, configuration||{});
 
-    Base.user  = $w['$U'] = ($w['$U']||{uId:'', uNo:Date.now(), uNm:''});
-    Base.wtf   = Base.logging = Base.tracking = function(){};
-
+    Base.user = $w['$U'] = ($w['$U']||{uId:'', uNo:(new Date()).format('yyyymmdd'), uNm:''});
+    Base.group= Base.groupEnd = Base.logging = Base.tracking = Base.wtf = Base.error =()=>{};
+    Base.config['is_debug'] && (Base.isDebug = !0);
     if (Base.config['is_debug']) {
         $w.onload = () => $w.console.warn(`window.onload.DocumentState - ${document.readyState}`);
         $w.onpageshow = () => $w.console.warn(`window.onpageshow.DocumentState - ${document.readyState}`);
@@ -49,52 +26,60 @@
 }) (window, __DOMAIN_NAME||'', __DOMAIN_CONF||{});
 
 
-/**
- * common fn.
- */
- (function($w, root) {
+/** common fn. */
+(function($w, root) {
     'use strict';
 
     if (!!!$w) return;
     if (!!!$w[root]) return;
 
     const Base = $w[root];
+    Base.getName = function(obj) {
+        if (typeof obj === 'undefined') return 'undefined';
+        if (obj === null) return 'null';
+        let result = Object.prototype.toString.call(obj).match(/^\[object\s(.*)\]$/)[1];
+        if (result == 'Object') {
+            return obj.constructor.name || result;
+        } else if (result == 'Function') {
+            return obj.prototype.constructor.name || result;
+        }
+        return result;
+    };
     Base.getBrowser= function() {
-        const n =$w['navigator'],
-              a = n['userAgent'].toLowerCase(),
-              s = 'MSIE,Beonex,Chimera,Chrome,Firefox,Mozilla,NetPositive,Netscape,Opera,Phoenix,Safari,SkipStone,StarOffice,WebTV';
+        const n = $w['navigator'],
+              a = $w['navigator']['userAgent'].toLowerCase(),
+              s = 'MSIE,Chimera,Chrome,Safari,Firefox,Beonex,NetPositive,Netscape,Opera,Phoenix,SkipStone,StarOffice,WebTV,Mozilla';
         let b = '';
-        s.split(',').some((v) => {if(a.indexOf(v.toLowerCase()) >= 0){b=v; return true;}} );
+        s.split(',').some((v) => {if(a.indexOf(v.toLowerCase()) >= 0){b=v.toLowerCase(); return true;}} );
         return {            
              navigator: n
             ,agent	  : a
             ,browser  : b
-            ,isMsIe   : () => (b === 'MSIE')
-            ,isChrome : () => (b === 'Chrome')
-            ,isSafari : () => (b === 'Safari')
+            ,isMsIe   :(b == 'msie')
+            ,isChrome :(b == 'chrome')
+            ,isSafari :(b == 'safari')
         };
     };
     Base.getDevice = function() {
         let n= $w['navigator'],
             p= $w['navigator']['platform' ],
             a= $w['navigator']['userAgent'],
-            b= this.Browser();
+            b= this.getBrowser();
         return {
              navigator	 : n
             ,platform	 : p
             ,browser     : b
-            ,isMobile 	 : () => (/linux armv7/i.test(p) || /ipad/i.test(p) || /iphone/i.test(p))
-            ,isAndroid	 : () => (/linux armv7/i.test(p))
-            ,isIos		 : () => (/ipad/i.test(p) || /iphone/i.test(p))
-            ,isIpad		 : () => (/ipad/i.test(p))
-            ,isIphone	 : () => (/iphone/i.test(p))
-            ,isGaltab	 : () => (/SHW-M/i.test(a))
-            ,isTouchPad	 : () => (/hp-tablet/gi).test(n.appVersion)
-            ,isBlackBerry: () => (/BlackBerry/i.test(p))
-            ,isTouch	 : () => ('ontouchstart' in $w)
-            ,isTablet	 : () => (/SHW-M/i.test(a)||$w.screen.width > 640)
-            ,isWide		 : () => ($w.screen.width > $w.screen.height)
-            ,isWin		 : () => (/win32/i.test(p) || /windows/i.test(p))
+            ,isMobile 	 : (a.match(/iPhone|iPod|Android|Windows CE|BlackBerry|Symbian|Windows Phone|webOS|Opera Mini|Opera Mobi|POLARIS|IEMobile|lgtelecom|nokia|SonyEricsson/i) != null || a.match(/LG|SAMSUNG|Samsung/) != null)
+            ,isAndroid	 : (/Android/i.test(a))
+            ,isIos		 : (/iPhone|iPad|iPod/i.test(a))
+            ,isIpad		 : (/iPad/i.test(a))
+            ,isIphone	 : (/iPhone/i.test(a))
+            ,isGaltab	 : (/SHW-M/i.test(a))
+            ,isTouchPad	 : (/hp-tablet/gi).test(n.appVersion)
+            ,isTouch	 : ('ontouchstart' in $w)
+            ,isTablet	 : (/SHW-M/i.test(a)||$w.screen.width > 640)
+            ,isWide		 : ($w.screen.width > $w.screen.height)
+            ,isWin		 : (/win32/i.test(p) || /windows/i.test(p))
         };
     };
     Base.extends = function(...args) {
@@ -102,6 +87,9 @@
     };
     Base.toString = function(arg) {
         return Object.prototype.toString.call(arg);
+    };
+    Base.isMobile   = function() {
+        return (Base.config['js_base_name']==='mo');
     };
     Base.isWindow   = function(arg) {
         return arg != null && arg === arg.window;
@@ -118,7 +106,7 @@
         } else {
             return this.toString(arg)=== '[object Object]';
         }
-    };
+    };    
     Base.type = function(value, typeName) {
         const isGet = arguments.length === 1;
         const result= (name) => {return isGet ? name : typeName === name;}
@@ -145,14 +133,14 @@
             return result('number');
         }
 
-        return isGet ? t : t === typeName;
+        return result(t);
     };
 }) (window, __DOMAIN_NAME||'');
 
 
 /**
  * common Core Class 
- * - extend class
+ * - class builder
  * - extend module 
  * - script import
  */
@@ -166,19 +154,20 @@
     const Root = root||'';
     const Base = $w[Root];
     const $doc = $w['document'];
-    const _Fix = '__';
+    const _NMS = Base.config['js_base_name']||'pc';
+    const _FIX = '__';
 
     /** base class */
     class Clazz {
         constructor(parent, name, source = {}) {
+            this.isInit     = false;
             this.className  = name;
             this.classPath  = parent && parent['classPath'] ? parent['classPath']+'.'+name : name;
-            this.initializer= undefined;
             Base.extends(this, source);
         }
         init(executor) {
             Base.logging(this, 'init()');
-            const This = this;            
+            const This = this;
             if (Base.isFunction(executor)) {
                 This.initializer = executor;
             }
@@ -203,10 +192,11 @@
     Base['classPath'] = Root;
     Base['classHeap'] = {};
     Base.Core = ClassBuilder(Base, 'Core', {
+        Clazz: Clazz,
         /** Find and returns an object that exists in the namespace */
         find : function(target, module = '') {
             if (!target) return undefined;
-            let clazz	= (typeof target == 'object') ? target : Base;
+            let clazz = (typeof target == 'object') ? target : Base;
             if (typeof target == 'string') {
                 let parts	= target.split('.');
                 if (parts[0]==Root) {
@@ -214,24 +204,32 @@
                 }
                 for (let i = 0; i < parts.length; i++) {
                     if (parts[i] == 'base') return clazz;
-                    if (typeof clazz[_Fix+parts[i]] == 'undefined') return undefined;                
-                    clazz = clazz[_Fix+parts[i]];
+                    if (typeof clazz[_FIX+parts[i]] == 'undefined') return undefined;
+                    clazz = clazz[_FIX+parts[i]];
                 }
             }
-            return module ? clazz[_Fix+module] : clazz;
+            return module ? clazz[_FIX+module] : clazz;
         },
         /** Returns the file path of an object as a namespace address */
         path : function(ns) {
             if (!ns) return undefined;
-            let paths	= '',
-                parts	= ns.split('.');
-            if (parts[0]==Root) {
-                parts	= parts.slice(1);
+            let paths = '',
+                parts = ns.split('.');
+            if (parts[0]==Root) parts = parts.slice(1);
+            if (parts[0]==_NMS) parts = parts.slice(1);
+            if (parts[parts.length-1]=='base') parts.pop();
+            if (parts.length > 1) {
+                for (let i= 0; i < parts.length-1; i++) {
+                    paths = (i == 0) ? parts[i] : `${paths}/${parts[i]}`;
+                }
+                return `${paths}/${parts[parts.length-1]}`;
             }
-            for (let i = 0; i < parts.length-1; i++) {
-                paths = (i == 0) ? parts[i] : `${paths}/${parts[i]}`;
+            else if (parts.length == 1) {
+                return `${parts[0]}/${parts[0]}.base`;
             }
-            return `${paths}/${ns}`;
+            else {
+                return ns;
+            }
         },
         /** Extend object by namespace address */
         namespace : function(ns) {
@@ -245,14 +243,14 @@
             }
             for (let i = 0; i < parts.length; i++) {
                 paths = paths +'.'+ parts[i];
-                if (typeof clazz[_Fix+parts[i]] === 'undefined') {
+                if (typeof clazz[_FIX+parts[i]] === 'undefined') {
                     isNewbie = true;
-                    clazz[_Fix+parts[i]] = ClassBuilder(clazz, parts[i], {
-                        classUUID : paths + (Base.user['uNo']?'.'+Base.user['uNo']:'')                        
+                    clazz[_FIX+parts[i]] = ClassBuilder(clazz, parts[i], {
+                        classUUID : paths +'.'+ (Base.user['uId'] || Base.user['uNo'] || Date.now())
                     });
-                    Base['classHeap'][ns] = clazz[_Fix+parts[i]];
+                    Base['classHeap'][ns] = clazz[_FIX+parts[i]];
                 }
-                clazz = clazz[_Fix+parts[i]];
+                clazz = clazz[_FIX+parts[i]];
             }
             if (isNewbie) Base.logging(clazz, `namespace( ${ns} )`);
             return clazz;
@@ -260,31 +258,34 @@
         /** Create and return a private built-in object */
         module : function(clazz, source, type = 'module') {
             if (!clazz) return undefined;
-            Base.logging(clazz, 'module()');            
-            return ClassBuilder(clazz, type, Base.extends({}, source||{}, {
-                className : (clazz['className']||Root),
+            if (Root != clazz.className) Base.logging(clazz, 'module()');
+            return Base.extends(source||{}, ClassBuilder(clazz, type, Base.extends({
+                className : (type||clazz['className']||Root),
                 classPath : (clazz['classPath']||Root)+'.'+type,
-                classUUID : (clazz['classPath']||Root)+((Base.user['uNo']||'') ? '.'+Base.user['uNo'] : '')
-            }));
+                classUUID : (clazz['classPath']||Root)+'.'+type+'.'+(Base.user['uId'] || Base.user['uNo'] || Date.now()),
+                rootClassPath : _NMS
+            }, (!!Base['isDebug'] ? {_isDebug:true} : {}))));
         },
-        /** Inherit the prototype methods from one constructor into another.*/
-        inherits  : function(child, parent) {
-            /** @constructor */
-            function objet() {}
-            objet.prototype = parent.prototype;
-            child.superClass= parent.prototype;
-            child.prototype = new objet();
-            /** @override */
-            child.prototype.constructor = child;
-            /** Calls superclass constructor/method. */
-            child.base = function(me, methodName) {
-                var args = new Array(arguments.length - 2);
-                for (var i = 2; i < arguments.length; i++) {
-                  args[i - 2] = arguments[i];
-                }
-                return parent.prototype[methodName].apply(me, args);
-            };
-            return child;
+        destroy : function(ns) {
+            Base.logging(Base, `destroy(${ns})`);
+            if (!ns) return;
+            /** 
+             * Namespace의 Class를 메모리에서 삭제하면 다시 JS를 로드하지 않으므로 사용하면 오히려 오류가 발생.
+             * - 한번 import되면 JS 모듈은 브라우저에서 cache하여 다시 import하지 않음.
+             * - import를 하지 않음으로 인해 JS compile이 발생하지 않아 삭제한 Namespace의 Class는 다시 샐행이 안됨.
+            */
+            if (Base.Core.find(ns)) {
+                let classNs	 = ns.split('.'),
+                    parentNs = ns.split('.'),
+                    clazzName= parentNs.pop(),
+                    parentCz = Base.Core.find(parentNs.join('.'));
+                if (classNs[0]==Root) classNs = classNs.slice(1);
+                Base.Define.remove(classNs.join('.'));
+                Base.classHeap[classNs.join('.')] = undefined;
+                parentCz[_FIX+clazzName] = undefined;
+                delete Base.classHeap[classNs.join('.')];
+                delete parentCz[_FIX+clazzName];
+            }
         },
         domEval : function(code, node) {
             let preservedScriptAttributes = { type: true, src: true, nonce: true, noModule: true },
@@ -298,35 +299,53 @@
                     }
                 }
             }
-            $doc.head.appendChild( script ).parentNode.removeChild( script );
+            try {
+                $doc.head.appendChild( script ).parentNode.removeChild( script );
+            } catch(e) {
+                throw new Error('Complie error.');
+            }
         },
         /** Promise Factory */
         pf : function(executor) {
             return new Promise(executor);
+        },
+        /** Delay executor */
+        sleep : function(delay) {
+            let timerId = -1;
+            return Base.Core.pf(function(resolve) {
+                timerId = $w.setTimeout(function() {
+                    resolve();
+                    $w.clearTimeout(timerId);
+                }, delay);
+            });
+        },
+        /** Delay loop executor */
+        loop : function(cnt, delay, resolve) {
+            let This = this;
+            for (let i = 0; i < cnt; i++) {
+                This.sleep(delay*i).then(()=>resolve(i, i==cnt-1));
+            }
         },
     });
 
     /** 
      * AMD(Asynchronous Module Definition) helper. 
      * - dynamic script loadding.
-     * */
+     * */    
     Base.Define = ClassBuilder(Base, 'Define', (function(){
-        const _version    = (new Date()).format('yyyymmddHHmi');
-        const _dependency = {
+        const JS_VERSION    = Base.config['js_version'] || (new Date()).format('yyyymmddHH');
+        const JS_DEPENDENCY = {
             modules : {
                 deffers : 0,
                 exports :{},
                 path: function(file = '') {
-                    let paths	= 'modules',
-                        files   = 'common.es6',
-                        parts	= file.split('.');
-                    if (parts[0]=='base') {
-                        parts	= parts.slice(1);
-                    }
-                    for (let i = 0; i < parts.length-1; i++) {
+                    let paths = '',
+                        files = 'common',
+                        parts = file.split('.');
+                    for (let i= 0; i < parts.length-1; i++) {
                         paths = `${paths}/${parts[i]}`;
                     }
-                    return `${paths}/${files}.${file}.js?v=${_version}`
+                    return `${Base.config['js_common_path']}${paths}/${files}.${file}.js?cVer=${JS_VERSION}`
                 },
                 add : function(m) {
                     this.deffers++;
@@ -349,14 +368,17 @@
                     return this.deffers==0; 
                 }
             },
-            path    : (file = '') => `${Base.config['js_path']}/${file}.js?v=${_version}`,
-            scripts : {}
+            path    : (file = '') => `${Base.config['js_path']}/${file}.js`,
+            pathVersioning : (src = '') => `${src}?cVer=${JS_VERSION}`,
+            scripts : {},
+            css : {}
         };
         const loadScript = function(src, id, isAsync) {
-            const xhrScriptLoader = function() {
+            let xhrScriptLoader = function() {
+                //Base.logging(this, `xhrScriptLoader( ${src}, ${id} ).`);
                 return Base.Core.pf(function(resolve, reject) {
                     let xhr = new XMLHttpRequest();
-                        xhr.open('GET', src);
+                        xhr.open('GET', src, isAsync);
                         xhr.onreadystatechange = function(event) {
                             const { target } = event;
                             if (XMLHttpRequest.DONE === target.readyState) {
@@ -369,21 +391,25 @@
                             }
                         };
                         xhr.send();
-                });                
-            };
-            const tagScriptLoader = function() {
-                return Base.Core.pf(function(resolve, reject) {
-                    let s = $doc.createElement('script');
-                        s.type= 'text/javascript';
-                        s.src = src;
-                        s.id  = id;
-                        s.onload = function() { if (Base.isFunction(resolve))resolve.apply(Base, arguments); };
-                        s.onerror= function() { if (Base.isFunction(reject)) reject.call(Base, new Error(`${src} loadding failed.`)); };
-                    $doc.getElementsByTagName('head')[0].appendChild(s);
                 });
             };
-
-            if (Base.getBrowser().isMsIe() || Base.config['is_debug']) {
+            let tagScriptLoader = function() {
+                //Base.logging(this, `tagScriptLoader( ${src}, ${id} ).`);
+                if (Base.getBrowser().isMsIe) {
+                    return Base.Core.pf(function(resolve, reject) {
+                        let s= $doc.createElement('script');
+                            s.type= 'text/javascript';
+                            s.src = src;
+                            s.id  = id;
+                            s.onload = function() { if (Base.isFunction(resolve))resolve.apply(Base, arguments); };
+                            s.onerror= function() { if (Base.isFunction(reject)) reject.call(Base, new Error(`${src} loadding failed.`)); };
+                        $doc.getElementsByTagName('head')[0].appendChild(s);
+                    });
+                } else {
+                    return import(src);
+                }
+            };
+            if (Base.getBrowser().isMsIe || Base['isDebug']) {
                 return tagScriptLoader();
             } else {
                 return xhrScriptLoader();
@@ -392,32 +418,34 @@
         const invokeScript = async function(src = '', id = '', isAsync = true) {
             Base.logging(this, `invokeScript( ${src}, ${id} )`);
             return Base.Core.pf(function(resolve, reject) {
-                let _chkCount = 0;
-                const _chkModules = function() {
-                    if (_dependency.modules.isComplete()) {                        
+                let chkCount = 0;
+                let chkModules = function() {
+                    if (JS_DEPENDENCY.modules.isComplete()) {
                         importScript(src, id, isAsync).then(resolve, reject);
                     } else {
-                        _chkCount++;
-                        if (_chkCount > 10) {
-                            if (Base.isFunction(reject)) reject.call(Base, new Error(`${src} dependency module loadding failed.`));
+                        chkCount++;
+                        if (chkCount > 2000) {
+                            if (Base.isFunction(reject)) {
+                                reject.call(Base, new Error(`[${src}] dependency module loadding failed.`));
+                            }
                         } else {
-                            $w.setTimeout(_chkModules, 1);
+                            Base.Core.sleep(3).then(chkModules);
                         }
                     }
                 };
-                $w.setTimeout(_chkModules, 0);
+                Base.Core.sleep(0).then(chkModules);
             });
         };
         const importScript = async function(src = '', id = '', isAsync = true) {
-            if (_dependency?.scripts[id]) {
-                Base.logging(this, `importScript( ${src}, ${id} ) -> loaded.`);
+            if (JS_DEPENDENCY?.scripts[id]) {
+                Base.logging(this, `importScript( ${src}, ${id} ) => loaded.`);
                 return Base.Core.pf(r => r.call(Base));
             }
             else {
-                Base.logging(this, `importScript( ${src}, ${id} ) -> loadding.`);
-                if (_dependency.modules.isComplete()) {
-                    _dependency.scripts[id] = _dependency.path(src);
-                    return loadScript(_dependency.scripts[id], id, isAsync);
+                Base.logging(this, `importScript( ${src}, ${id} ) => loadding.`);
+                if (JS_DEPENDENCY.modules.isComplete()) {
+                    JS_DEPENDENCY.scripts[id] = JS_DEPENDENCY.pathVersioning(src);
+                    return loadScript(JS_DEPENDENCY.scripts[id], id, isAsync);
                 } 
                 else {
                     return invokeScript(src, (id||src), isAsync);
@@ -425,76 +453,157 @@
             }
         };
         const importModule = async function(args) {
-            Base.logging(Base, `${args['name']} module import start.`);
-            const oModule = _dependency.modules.add(args);
             return Base.Core.pf(function(resolve, reject) {
-                const _checkModule = function() {
-                    let _complete = true;
+                let oModule = JS_DEPENDENCY.modules.add(args);
+                let fnCheckModule= function() {
+                    let complete = true;
                     oModule.require?.forEach(name => {
-                        _complete = !(_complete && _dependency.modules.exports[name]?.isLoaded === false);
+                        complete = !(complete && JS_DEPENDENCY.modules.exports[name]?.isLoaded === false);
                     });
-                    if (_complete) {
-                        _importModule();
+                    if (complete) {
+                        fnImportModule();
                     } else {
-                        $w.setTimeout(_checkModule, 10);
+                        Base.Core.sleep(1).then(fnCheckModule);
                     }
                 };
-                const _importModule = function() {
+                let fnImportModule = function() {
                     loadScript(oModule['jsFile'], oModule['name'], oModule['isAsync'])
                         .then(function() {
-                            _dependency.modules.done(oModule);
-                            Base.tracking(`module import success -> ${oModule['name']}`, arguments);
+                            JS_DEPENDENCY.modules.done(oModule);
+                            Base.tracking(`module import success => ${oModule['name']}`, oModule);
                             if (Base.isFunction(resolve)) resolve.call(Base, oModule);
                         })
                         .catch(function() {
-                            _dependency.modules.failed(oModule);
-                            Base.tracking(`module import failed -> ${oModule['name']}`, arguments);
+                            JS_DEPENDENCY.modules.failed(oModule);
+                            Base.tracking(`module import failed => ${oModule['name']}`, oModule);
                             if (Base.isFunction(reject)) reject.call(Base, oModule);
                         });
                 };
                 if (oModule.require?.length > 0) {
-                    _checkModule();
+                    fnCheckModule();
                 } else {
-                    _importModule();
+                    fnImportModule();
                 }
             });
+        };
+        const loadCss = function(src) {
+            return Base.Core.pf(function(resolve, reject) {
+                let s= $doc.createElement('link');
+                    s.rel = 'stylesheet';
+                    s.type= 'text/css';
+                    s.href= src;
+                    s.onload = function() { if (Base.isFunction(resolve)) resolve.apply(Base, arguments); };
+                    s.onerror= function() { if (Base.isFunction(reject)) reject.call(Base, new Error(`${src} loadding failed.`)); };
+                $doc.getElementsByTagName('head')[0].appendChild(s);
+            });
+        };
+        const importCss = function(src, id) {
+            if(!JS_DEPENDENCY?.css[id]) {
+                Base.logging(this, `importCss( ${src}, ${id} ) => loaded.`);
+                JS_DEPENDENCY.css[id] = JS_DEPENDENCY.pathVersioning(src);
+                return loadCss(JS_DEPENDENCY.css[id]);
+            }
         };
 
         return {
             /** import script on the fly */
             import  : async function(src = '', id = '', isAsync = true) {
                 if (!!!src) return undefined;
-                return importScript(src, (id||src), isAsync);
+                if (src.indexOf('.css') > -1) {
+                    return importCss(src, (id||src));
+                } else {
+                    return importScript(src, (id||src), isAsync);
+                }
             },
-            /** import script after document ready */
+            remove  : function(id = '') {
+                if (JS_DEPENDENCY?.scripts[id]) delete JS_DEPENDENCY.scripts[id];
+            },
+            invokeOnControl : async function(parentNs, scriptPath) {
+                if (!!!parentNs || !!!scriptPath) return undefined;
+                let fnSrciptNs = ((arr)=>{ 
+                    let ns = parentNs.replaceAll(`${Root}.`, '').split('.');
+                    arr.forEach((s) => {
+                        if (s && s != 'forward') {
+                            if (s.indexesOf('.action')) s = s.split('.action')[0];
+                            if (s.indexesOf('.js')) s = s.split('.js')[0];
+                            ns.push(s);
+                        }
+                    });
+                    return ns.join('.');
+                })(scriptPath.split('/'));
+                return this.invoke(fnSrciptNs);
+            },
+            /** import script after document ready. */
             invoke  : async function(ns) {
                 if (!ns) return undefined;
                 return Base.Core.pf(function(resolve, reject) {
-                    const _resolveFn = function(args) {
+                    let fnResolve = function(args) {
                         Base.logging(Base, `${ns} > Dynamic script invoke resolve.`);
-                        const _chkObj= function() {
+                        let fnChkObj = function() {
                             if (Base.Core.find(ns)) {
                                 Base.logging(Base, `${ns} > Dynamic script invoke complete.`);
                                 if (Base.isFunction(resolve)) resolve.call(Base, Base.Core.find(ns));
                             } else {
-                                $w.setTimeout(_chkObj, 1);
+                                Base.Core.sleep(1).then(fnChkObj);
                             }
                         };
-                        $w.setTimeout(_chkObj, 0);
+                        Base.Core.sleep(0).then(fnChkObj);
                     };
-                    const _rejectFn = function() {
+                    let fnReject = function() {
                         Base.logging(Base, `${ns} > Dynamic script invoke reject.`);
                         if (Base.isFunction(reject)) reject.call(Base, arguments);
                     };
-                    const _chkState = function() {
+                    let fnChkState = function() {
                         if ($doc.readyState === 'complete') {
-                            invokeScript(Base.Core.path(ns), ns).then(_resolveFn, _rejectFn);
+                            invokeScript(JS_DEPENDENCY.path(Base.Core.path(ns)), ns).then(fnResolve, fnReject);
                         } else {
-                            $w.setTimeout(_chkState, 3);
+                            Base.Core.sleep(3).then(fnChkState);
                         }
                     };
-                    $w.setTimeout(_chkState, 0);
+                    Base.Core.sleep(0).then(fnChkState);
                 });
+            },
+            /** scripts in namespace are called consecutively. */
+            invoker : async function(ns) {
+                if (!ns) return undefined;
+                return Base.Core.pf(function(resolve, reject) {
+                    let index   = 0,
+                        names	= '',
+                        paths	= '',
+                        parts	= ns.split('.');
+                    if (parts[0]==Root) {
+                        parts	= parts.slice(1);
+                    }
+                    let fnInvoker = function() {
+                        if (index < parts.length) {
+                            paths = (paths ? paths +'.'+ parts[index] : parts[index]);
+                            names = (index < parts.length-1) ? paths+'.base' : paths;    
+                            Base.Define.invoke(names).then(function(oModule) {
+                                if (oModule && oModule['init']) {
+                                    oModule?.init.call(oModule);
+                                }
+                                index++;
+                                fnInvoker();
+                            });
+                        } else {
+                            if (Base.isFunction(resolve)) resolve.call(Base, Base.Core.find(ns));
+                        }
+                    };
+                    fnInvoker();
+                });
+                /*
+	            const promiseList = [];
+                for(let index = 0; index < parts.length; index++) {
+                    paths = (paths ? paths +'.'+ parts[index] : parts[index]);
+                    names = (index < parts.length-1) ? paths+'.base' : paths;
+                    promiseList.push(Base.Define.invoke(names).then(function(oModule) {
+                        if (oModule && oModule['init']) {
+                            oModule?.init.call(oModule);
+                        }
+                    }));
+                }
+                return Promise.all(promiseList);
+                */
             },
             /** import common script module */
             module  : async function(parent, module) {
@@ -509,13 +618,14 @@
             },
             /** import common script module lists */
             modules : function(parent, moduleList) {
-                if (Base.config['is_debug'] && !Base['isExtendLogging']) {
+                if (Base['isDebug'] && !Base['isExtendLogging']) {
                     moduleList.unshift({name:'Debug', filePath:'base.debug', isAsync:true, isExtend:false});
                 }
+                const This = this;
                 const promiseList = [];
-                for(let i in moduleList) {
-                    promiseList.push(this.module((parent ? parent : Base), moduleList[i]));
-                }
+                moduleList.forEach(function(m) {
+                    promiseList.push(This.module((parent ? parent : Base), m));	
+                });
                 return Promise.all(promiseList);
             },
         };
@@ -535,22 +645,74 @@
 
     const Root = root||'';
     const Base = $w[Root];
+    const fnGenerator = (path, name, vars) => Base.extends({name:name, filePath:`${path.toLowerCase()}`}, vars);
 
     // base common module.
     Base.Define.modules(Base, [
-        {name:'DomHelper', filePath:'base.dom'     , isAsync:true, isExtend:true},
-        {name:'Utils'    , filePath:'base.utils'   , isAsync:true, isExtend:true},
-        {name:'Fetch'    , filePath:'base.fetch'   , isAsync:true, isExtend:true},
-        {name:'Control'  , filePath:'base.control' , isAsync:true, isExtend:true},
-        {name:'Events'   , filePath:'base.events'  , isAsync:true, isExtend:true, require:['DomHelper', 'Utils', 'Fetch']},
-    ]).then(() => {
-        // control module.
-        Base.Define.modules(Base.Control, [
-            {name:'Page' , filePath:'control.page' , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch']},
-            {name:'Ui'   , filePath:'control.ui'   , isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch', 'DomHelper', 'Event']},
-        ]);
+        {name:'DomHelper'	, filePath:'base.dom'		, isAsync:false, isExtend:true},
+        {name:'Utils'		, filePath:'base.utils'		, isAsync:true , isExtend:true},
+        {name:'Control'		, filePath:'base.control'	, isAsync:false, isExtend:true},
+        {name:'Observer'	, filePath:'base.observer'	, isAsync:true , isExtend:true},
+        {name:'Timer'		, filePath:'base.timer'	    , isAsync:true , isExtend:true},
+        {name:'Fetch'		, filePath:'base.fetch'		, isAsync:true , isExtend:true, require:['Timer']},
+        {name:'Excel'		, filePath:'base.excel'		, isAsync:true , isExtend:true, require:['Utils', 'Fetch']},
+        {name:'Validation'	, filePath:'base.validation', isAsync:true , isExtend:true, require:['Utils', 'Fetch', 'DomHelper']},
+    ]).then((...args) => {
+        // event module.
+        Base.Define.modules(Base, [
+            {name:'Event'	, filePath:'base.event'	    , isAsync:true , isExtend:true, require:['Utils']},
+        ]).then((...args) => {
+            const eventVar = {isAsync:true, isExtend:true, require:['Utils', 'Event']};
+            Base.Define.modules(Base.Event, [
+                fnGenerator('event.eventtype'  ,'EventType'       ,eventVar),
+                fnGenerator('event.keycodes'   ,'KeyCodes'        ,eventVar),
+                fnGenerator('event.keynames'   ,'KeyNames'        ,eventVar),
+                fnGenerator('event.handler'    ,'EventHandler'    ,eventVar),
+                fnGenerator('event.delegator'  ,'EventDelegator'  ,eventVar),
+            ]).then((...args) => {});
+        });
 
-        // ui control module.
+        // schdule module.
+        Base.Define.modules(Base, [
+            {name:'Schedule'	, filePath:'base.schedule'	, isAsync:true , isExtend:true, require:['Timer']},
+        ]).then((...args) => {
+            const scheduleVar = {isAsync:true, isExtend:true, require:['Utils', 'Timer', 'Schedule']};
+            Base.Define.modules(Base.Schedule, [
+                fnGenerator('schedule.cron-parser'   ,'CronParser'   ,scheduleVar),
+                fnGenerator('schedule.cron-container','CronContainer',scheduleVar),
+                fnGenerator('schedule.scheduler'     ,'Scheduler'    ,scheduleVar),
+                fnGenerator('schedule.task-manager'  ,'TaskManager'  ,scheduleVar),
+                fnGenerator('schedule.task-processer','TaskProcesser',scheduleVar),
+            ]).then((...args) => {});
+        });
+
+        // control module.
+        const ctrlVar = {isAsync:true, isExtend:true, require:['Control', 'Utils', 'Fetch', 'DomHelper', 'Event', 'Timer', 'Observer']};
+        Base.Define.modules(Base.Control, [
+            fnGenerator('control.calendar' ,'Calendar'  ,ctrlVar),
+            fnGenerator('control.component','Component' ,ctrlVar),
+            fnGenerator('control.context'  ,'Context'   ,ctrlVar),
+            fnGenerator('control.image'    ,'Image'     ,ctrlVar),
+            fnGenerator('control.form'     ,'Form'      ,ctrlVar),
+            fnGenerator('control.page'     ,'Page'      ,ctrlVar),
+            fnGenerator('control.popup'    ,'Popup'     ,ctrlVar),
+            fnGenerator('control.ui'       ,'Ui'        ,ctrlVar),
+        ]).then((...args) => {
+
+        //     // ui control module.
+        //     const uiVar = {isAsync:true, isExtend:true, require:['Control', 'Context', 'Component', 'Ui']};
+        //     Base.Define.modules(Base.Control.Ui, [ 
+        //         fnGenerator('control.ui.menu'      ,'MenuControl'       ,uiVar),
+        //         fnGenerator('control.ui.tab'       ,'TabControl'        ,uiVar),
+        //         fnGenerator('control.ui.panel'     ,'PanelControl'      ,uiVar),
+        //         fnGenerator('control.ui.layer'     ,'LayerControl'      ,uiVar),
+        //         fnGenerator('control.ui.calendar'  ,'CalendarControl'   ,uiVar),
+        //         fnGenerator('control.ui.editor'    ,'EditorControl'     ,uiVar),
+        //         fnGenerator('control.ui.image'     ,'ImageControl'      ,uiVar),
+        //         fnGenerator('control.ui.pagination'     ,'PaginationControl'    ,uiVar),
+        //         fnGenerator('control.ui.tab-list-panel' ,'TabListPanelControl'  ,uiVar),
+        //     ]);
+        });
     });   
 
 }) (window, __DOMAIN_NAME||'');

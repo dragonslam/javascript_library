@@ -1,28 +1,14 @@
-/* biz.base.js
+/* biz.part.base.js
  	writ by yi seung-yong(dragonslam@nate.com)
  	date, 2022/04/19
 */
 (function($w, root) {
-	'use strict';
-	
 	if (!!!$w) return;
 	if (!!!$w[root]) return;
 	
 	const Base = $w[root];
 	const Appl = Base.Core.namespace('biz');
-	
-	Appl.const = {};
-	Appl.configuration = {
-		isStatusSave: true,
-		ajaxOptions	: {type: 'post', dataType: 'json', useMask: true, async: true, cache: false},
-		sessionCache: {type:'cache', span:30, format:'s'},
-		localCache	: {type:'local', span:3 , format:'h'},
-		calendar	: {
-			min_year: -5,
-			max_year:  5,
-			format	: 'yyyy.MM.dd'
-		},
-	};
+	const Part = Base.Core.namespace('biz.part');
 
 	const elements		= {
 		container		: {selecter : 'body'},
@@ -34,18 +20,18 @@
 	const transactions = {		
 	};
 	
-	Appl.init	= function() {
+	Part.init	= function(options) {
 		Base.logging(this, `init()`);
-		if (!!this.isInit) return this;
-		Base.Control.Page.createControl(this, PageControlPrototype).init({
+		if (!!this.isInit) return This;
+		const This = this;
+		Base.Control.Page.createControl(Part, PageControlPrototype).init({
 			cacheOption : Appl.configuration.sessionCache,
 			elements	: elements,
 			transactions: transactions
 		});
-		this.isInit = true;
-		return this;
+		This.isInit = true;
+		return This;
 	};
-
 
 	/** Page Control이 화면에 표시된 후 초기 작업을 재정의. */
 	const PageControlPrototype = {
@@ -55,5 +41,7 @@
 			const Elem = This.getElements();
 		},
 	};
-	
+
+	/*** Page Group의 공통 기능을 구현해 보아요. */
+
 }) (window, __DOMAIN_NAME||'');
