@@ -207,7 +207,7 @@
 	};
 	Appl.readNotice = function(noticeNo, isCheck) {
 		let This	= this,
-			sCacheNm= 'BrandAnalyticsNoticeNewPostRead',
+			sCacheNm= 'NoticeNewPostRead',
 			oNtCache= $w['oCache']({prifix:This.classPrifix, type:'local', span:30, format:'d'}),
 			oNtData = oNtCache.isStatus(sCacheNm) ? JSON.parse(oNtCache.get(sCacheNm)) : {},
 			isRead	= false;
@@ -249,7 +249,7 @@
 				let oNow = (new Date()),
 					oLink= document.createElement('a');
 				
-				oLink.download = 'BrandAnalytics_'+ (fileName||'excelExport') +'.xls';
+				oLink.download = 'Excel_'+ (fileName||'excelExport') +'.xls';
 				oLink.href = 'data:,'+ excelExport(excelTableId).parseToXLS((seetName||fileName||'seet')).getRawXLS(); 
 				oLink.click();
 				
@@ -700,7 +700,7 @@
 			Appl.renderRankerPageNavigation(oPanel, oList.length);
 		}
 	};
-	/** 셀러 판매 카테고리 조회. */
+	/** 판매 카테고리 조회. */
 	Appl.getSellerSalesCategory = function(oCaller, oParams, callback) {
 		Base.logging(this, 'getSellerSalesCategory()');
 		if (!oCaller || !oParams || !callback) return;
@@ -785,11 +785,11 @@
 		
 		
 		// ////////////////////////////////////////////////////////
-		// Brand Analytics 사용 권한을 체크.  
+		// 사용 권한을 체크.  
 		This.initProcessCheck();
-		// Brand Analytics 긴급 공지 표시. 
+		// 긴급 공지 표시. 
 		This.initNoticePopup();
-		// Brand Analytics 신규 게시글 확인. 
+		// 신규 게시글 확인. 
 		This.initNoticeNewPost();
 		// ////////////////////////////////////////////////////////
 		
@@ -891,14 +891,14 @@
 				let file= '';//'/data1/upload/seller_insights/20210324/20210324154523_BA Manual 20210324.pdf';
 				let seq = '20210323';
 				let req = new XMLHttpRequest();
-				req.open('POST', '/api/brandAnalytics/marketing/download', true);
+				req.open('POST', '/api/marketing/download', true);
 				req.responseType = 'blob';
 				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 				req.onload = function (e) {
 					let blob = req.response;
 					let link = document.createElement('a');
 					link.href = $w.URL.createObjectURL(blob);
-					link.download = 'BrandAnalyticsManual.pdf';
+					link.download = 'AnalyticsManual.pdf';
 					link.click();
 				};
 				req.send('fileUrl='+ file +'&dataId='+ seq);
@@ -981,9 +981,9 @@
 					if (!!!o['authorized']) {
 						Appl.showAlert(
 							 '권한 승인 절차 진행중'
-							,'11번가 브랜드 애널리틱스 이용 신청이 이미 접수되어,<br/>승인절차가 진행 중입니다.<br/><br/>가입절차 진행과 관련하여 문의사항이 있으신 경우<br/>담당MD에게 연락해 주세요.'
+							,'담당MD에게 연락해 주세요.'
 							,function() {
-								location.href = '/brandAnalytics/RegistrationWaiting.tmall';
+								location.href = '/RegistrationWaiting.tmall';
 							}
 						);
 					}
@@ -993,7 +993,7 @@
 								 '권한 승인 절차 진행중'
 								,'정보제공 동의를 요청한 셀러가 수락하지 않아서<br/>"공식셀러 종합분석" 리포트를 조회하실 수 없습니다.<br/><br/>셀러에게 동의 수락을 독려해 주세요.'
 								,function() {
-									location.href = '/brandAnalytics/RegistrationSetting.tmall';
+									location.href = '/RegistrationSetting.tmall';
 								}
 							);
 						}
@@ -1005,7 +1005,7 @@
 	Module.initNoticePopup = function() {
 		Base.logging(this, 'initNoticePopup()');
 		let This	= this,
-			sCacheNm= 'BrandAnalyticsNoticePopup_',
+			sCacheNm= 'NoticePopup_',
 			oNtCache= $w['oCache']({prifix:This.classPrifix, type:'local', span:1, format:'d'}),
 			oParam	= {
 				'isPopup'	: 'Y',
@@ -1042,7 +1042,7 @@
 		Base.logging(this, 'initNoticeNewPost()');
 		let This	= this,
 			oNavi	= This.cont.oContainer.find('.navi'),
-			sNpCache= 'BrandAnalyticsNoticeNewPostData',
+			sNpCache= 'NoticeNewPostData',
 			oNpCache= $w['oCache']({prifix:This.classPrifix, type:'cache', span:10, format:'m'});
 		if (!oNavi || !oNavi.find('.btn_notice .icon_new').length) {
 			return;
@@ -1731,24 +1731,24 @@
 			This.options['menuType'] === 'ConvertProduct'
 		) {
 			tranTxt = '주문전환율';
-			tranApi = 'brandOwnerSalesConversionResult';
+			tranApi = 'ownerSalesConversionResult';
 			oRender	= 'setHeaderTotalInfoSalesConversionResult';
 		}
 		else if (This.options['menuType'] === 'InflowCategory') {
 			tranTxt = '페이지뷰 합계';
-			tranApi = 'brandOwnerInflowPageViewResult';
+			tranApi = 'ownerInflowPageViewResult';
 			oRender	= 'setHeaderTotalInfoInflowPageViewResult';
 			oParams['largeCategoryNo'] = '0';
 			oParams['middleCategoryNo']= '0';
 		}
 		else if (This.options['menuType'] === 'InflowProduct') {
 			tranTxt = ''
-			tranApi = 'brandOwnerInflowPageViewResult';
+			tranApi = 'ownerInflowPageViewResult';
 			oRender	= 'setHeaderTotalInfoProductwResult';
 		}
 		else {
 			tranTxt = '전체거래액';
-			tranApi = 'brandOwnerSalesTotalAmount';
+			tranApi = 'ownerSalesTotalAmount';
 			oRender	= 'setHeaderTotalInfoSalesTotalAmount';
 		}
 		if (!tranApi) return;
